@@ -413,7 +413,7 @@
     
     <script type="module">      
       
-      const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || '';
+      const BACKEND_URL = (import.meta.env.PUBLIC_BACKEND_URL || '').trim();
 
       
       const PRODUCTS = ['SIOMAY','UDANG KEJU','PENTOL','ADONAN PANGSIT','AYAM CINCANG','LUMPIA','KERUPUK MIE','KULIT PANGSIT','MIE','CABAI'];
