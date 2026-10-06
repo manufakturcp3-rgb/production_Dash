@@ -1,47 +1,17 @@
-/**
- * ============================================================
- * BACKEND.JS — Web App penyedia data JSON untuk display Astro
- * ============================================================
- * Script ke-2 dari arsitektur tanpa Supabase:
- *   1. produksi/Kode.js = PENARIK (2 sumber -> 1 sheet target)
- *   2. backend/Backend.js = PENYEDIA (baca sheet -> JSON buat Astro)
- *
- * Cara pakai:
- *   1. Buat project Apps Script baru (standalone).
- *   2. Paste seluruh file ini -> Save.
- *   3. Deploy > New deployment > Web app:
- *        Execute as: Me
- *        Who has access: Anyone
- *      -> Copy URL .../exec (masukkan ke display sebagai
- *         PUBLIC_BACKEND_URL).
- *   4. Kalau edit kode lagi: Deploy > Manage deployments >
- *      Edit (icon pensil) > Version: New version (URL tetap sama).
- *
- * Endpoint:
- *   GET ?action=all          -> { dashboard, leaderboard }
- *   GET ?action=dashboard    -> { dashboard }
- *   GET ?action=leaderboard  -> { leaderboard }
- *   Tambah &refresh=1 untuk bypass cache (debug).
- * ============================================================
- */
-
 const BACKEND_CONFIG = {
   DASHBOARD: {
     spreadsheetId: '1OrmtFMggqx0j5uW_X5Nxfo23ty61F7m6ppKWEPvPu0s',
     sheetName: 'DASHBOARD KHUSUS',
     startRow: 6,
-    maxRows: 15 // hanya N baris terbaru (display cuma butuh baris terakhir)
+    maxRows: 15 
   },
   LEADERBOARD: {
     spreadsheetId: '146f5qPWBsDEyIn1e6WpjN-bfkGZXwGQfdqlybhsXdS4',
     sheetName: 'Leaderboard 5R'
   },
-  CACHE_SECONDS: 600 // 10 menit
+  CACHE_SECONDS: 600 
 };
 
-// ============================================================
-// ENTRY POINT WEB APP
-// ============================================================
 function doGet(e) {
   const params = (e && e.parameter) || {};
   const action = String(params.action || 'all').toLowerCase();
@@ -62,7 +32,7 @@ function doGet(e) {
     try {
       cache.put(cacheKey, text, BACKEND_CONFIG.CACHE_SECONDS);
     } catch (cacheErr) {
-      // Payload > 100KB (limit ScriptCache) -> sajikan tanpa cache
+      
     }
     return jsonOut(text);
   } catch (err) {
@@ -81,10 +51,6 @@ function buildPayload(action) {
   return payload;
 }
 
-// ============================================================
-// DASHBOARD KHUSUS — mulai baris 6, header multi-baris (2-5)
-// Format key SAMA seperti Featch.js: produk__kategori__shift
-// ============================================================
 function readDashboard() {
   const cfg = BACKEND_CONFIG.DASHBOARD;
   const ss = SpreadsheetApp.openById(cfg.spreadsheetId);
@@ -119,7 +85,7 @@ function readDashboard() {
     colNames.push(sanitizeKey(unique.join('__') || 'col_' + (c + 1)));
   }
 
-  // Ambil N baris TERBARU saja (payload kecil, display cuma butuh yang terakhir)
+  
   const totalRows = lastRow - startRow + 1;
   const take = Math.min(totalRows, cfg.maxRows || 15);
   const fromRow = lastRow - take + 1;
@@ -139,12 +105,6 @@ function readDashboard() {
   return records;
 }
 
-// ============================================================
-// LEADERBOARD 5R — Top Late/Overtime + Foreman per Produk + IMG URL
-// Layout (baris 1 = header):
-//   A=RANK | B=TOP_LATE | C=TOP_OVERTIME | ... | G=PROD |
-//   H=FOREMAN_1 | I=IMG | J=FOREMAN_2 | K=IMG | L=FOREMAN_3 | M=IMG
-// ============================================================
 function readLeaderboard() {
   const cfg = BACKEND_CONFIG.LEADERBOARD;
   const ss = SpreadsheetApp.openById(cfg.spreadsheetId);
@@ -250,9 +210,6 @@ function readLeaderboard() {
   return { ranking: ranking, foremen: foremen };
 }
 
-// ============================================================
-// UTIL
-// ============================================================
 function sanitizeKey(str) {
   return String(str)
     .toLowerCase()
@@ -263,7 +220,6 @@ function sanitizeKey(str) {
     || 'col';
 }
 
-/** Hapus cache manual (debug) */
 function clearBackendCache() {
   CacheService.getScriptCache().removeAll(['backend_all', 'backend_dashboard', 'backend_leaderboard']);
   Logger.log('Backend cache dibersihkan.');
