@@ -19,6 +19,20 @@
   </head>
 
   <body>
+    <!-- Ikon dekorasi terbang -->
+    <div class="float-deco" aria-hidden="true">
+      <span style="top:12%; left:3%; font-size:34px; animation-duration:7s;">🏭</span>
+      <span style="top:8%; left:28%; font-size:26px; animation-duration:9s; animation-delay:-2s;">⚙️</span>
+      <span style="top:14%; right:6%; font-size:30px; animation-duration:8s; animation-delay:-4s;">📦</span>
+      <span style="top:38%; left:1%; font-size:24px; animation-duration:10s; animation-delay:-1s;">⭐</span>
+      <span style="top:44%; right:2%; font-size:28px; animation-duration:7.5s; animation-delay:-3s;">🔧</span>
+      <span style="bottom:24%; left:5%; font-size:26px; animation-duration:9.5s; animation-delay:-5s;">📊</span>
+      <span style="bottom:18%; right:4%; font-size:32px; animation-duration:8.5s; animation-delay:-2.5s;">🏆</span>
+      <span style="bottom:8%; left:35%; font-size:24px; animation-duration:11s; animation-delay:-6s;">✅</span>
+      <span style="top:60%; left:44%; font-size:22px; animation-duration:9s; animation-delay:-3.5s;">💡</span>
+      <span style="top:22%; right:30%; font-size:22px; animation-duration:10.5s; animation-delay:-1.5s;">🚀</span>
+    </div>
+
     <div id="app" class="app-wrapper">
 
       <!-- ====== HEADER ====== -->
@@ -233,10 +247,12 @@
         height: clamp(56px, 9vh, 84px);
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid var(--teal);
-        box-shadow: 0 0 14px rgba(0,179,216,0.4);
-        background: rgba(0,179,216,0.1);
+        border: 3px solid var(--ink);
+        box-shadow: 4px 4px 0 var(--c1);
+        background: var(--c1-soft);
       }
+
+      .foreman-item:nth-child(even) .foreman-img { box-shadow: 4px 4px 0 var(--c2); }
 
       .foreman-ph {
         width: clamp(56px, 9vh, 84px);
@@ -247,9 +263,10 @@
         justify-content: center;
         font-size: 24px;
         font-weight: 900;
-        background: rgba(0,179,216,0.12);
-        border: 3px dashed rgba(0,179,216,0.4);
-        color: var(--teal);
+        background: var(--c1-soft);
+        border: 3px solid var(--ink);
+        box-shadow: 4px 4px 0 var(--c1);
+        color: var(--ink);
       }
 
       .foreman-name {
@@ -282,7 +299,12 @@
         gap: 6px;
         min-height: 0;
         overflow: hidden;
+        background: var(--card);
       }
+
+      .box:nth-child(odd) { background: #fff; }
+      .box:nth-child(even) { background: var(--c1-soft); }
+      .box:nth-child(3n) { background: var(--c2-soft); }
 
       .box-label {
         font-size: clamp(10px, 1.6vh, 13px);
@@ -312,11 +334,11 @@
         flex-wrap: wrap;
       }
 
-      .box-value.teal    { color: var(--teal); }
-      .box-value.magenta { color: var(--magenta); }
+      .box-value.teal    { color: #0284a8; }
+      .box-value.magenta { color: #be185d; }
       .box-value.gold    { color: var(--gold); }
       .box-value.danger  { color: var(--danger); }
-      .box-value.success { color: var(--success); }
+      .box-value.success { color: #047857; }
       .box-value.muted   { color: var(--text-muted); font-size: clamp(14px, 2.5vh, 22px); }
 
       .kpi-unit {
@@ -343,13 +365,16 @@
         align-items: center;
         gap: 8px;
         font-size: clamp(10px, 1.7vh, 13px);
-        font-weight: 600;
-        background: rgba(255,255,255,0.05);
+        font-weight: 700;
+        background: #fff;
+        border: 2px solid var(--ink);
         border-radius: 9px;
+        box-shadow: 2px 2px 0 var(--ink);
         padding: 4px 10px;
         white-space: nowrap;
         overflow: hidden;
         text-align: left;
+        color: var(--ink);
       }
 
       .box-top5 li span:last-child {
@@ -359,10 +384,13 @@
 
       .top5-rank {
         font-weight: 900;
-        color: var(--gold);
-        min-width: 20px;
+        color: #fff;
+        background: var(--ink);
+        border-radius: 6px;
+        min-width: 22px;
         text-align: center;
         flex-shrink: 0;
+        padding: 0 3px;
       }
 
       .footer-bar {
