@@ -1,9 +1,3 @@
-/* =====================================================
-   CENTRAL PRODUCTION 3 — Brutalist Light Theme
-   Base putih + 2 warna aksen (teal & pink) + ikon terbang
-   Kartu: border tebal, hard shadow, tanpa glassmorphism
-   ===================================================== */
-
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap');
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -12,8 +6,8 @@
   --bg: #f6f4ec;
   --card: #ffffff;
   --ink: #161616;
-  --c1: #00a9ce;   /* teal */
-  --c2: #ec008d;   /* pink */
+  --c1: #00a9ce;   
+  --c2: #ec008d;   
   --c1-soft: #d3f2fa;
   --c2-soft: #ffd9ec;
   --gold: #b45309;
@@ -47,7 +41,6 @@ html, body {
   line-height: 1.5;
 }
 
-/* Pola dot halus di background */
 body::before {
   content: '';
   position: fixed;
@@ -58,7 +51,6 @@ body::before {
   pointer-events: none;
 }
 
-/* ===== Ikon terbang warna-warni ===== */
 .float-deco {
   position: fixed;
   inset: 0;
@@ -80,7 +72,6 @@ body::before {
   50% { transform: translateY(-22px) rotate(8deg); }
 }
 
-/* Kartu brutalist (pengganti glass) */
 .glass {
   background: var(--card);
   border: 3px solid var(--ink);
@@ -94,7 +85,6 @@ body::before {
   transition: var(--transition);
 }
 
-/* KPI Card (dipakai bila ada) */
 .kpi-card {
   display: flex;
   flex-direction: column;
@@ -147,7 +137,6 @@ body::before {
 .kpi-value.success { color: var(--success); }
 .kpi-value.muted  { color: var(--text-muted); font-size: 0.6em; }
 
-/* Pill badge brutalist */
 .pill {
   background: var(--card);
   border: 3px solid var(--ink);
@@ -170,7 +159,6 @@ body::before {
   background: var(--c1-soft);
 }
 
-/* Header */
 .main-header {
   border-radius: var(--radius-xl);
   padding: 12px 24px;
@@ -198,7 +186,6 @@ body::before {
   object-fit: contain;
 }
 
-/* Leaderboard lama (tidak dipakai layout baru, disimpan) */
 .leader-header {
   display: grid;
   grid-template-columns: 28px 1fr 4px 72px 72px 64px 28px;
@@ -243,7 +230,6 @@ body::before {
 .score-bad   { background: #ffe4e6; color: #9f1239; }
 .score-zero  { background: #e4e4e7; color: #52525b; }
 
-/* Avatar */
 .avatar-wrapper {
   position: relative;
   display: inline-block;
@@ -280,7 +266,6 @@ body::before {
 .badge-crown { background: var(--c1); }
 .badge-warn  { background: var(--c2); }
 
-/* Filter select */
 .filter-select {
   background: transparent;
   border: none;
@@ -299,7 +284,6 @@ body::before {
   color: #161616;
 }
 
-/* Divider 2 warna */
 .grad-divider {
   width: 100%;
   height: 4px;
@@ -309,12 +293,10 @@ body::before {
   margin: 4px 0;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--ink); border-radius: 3px; }
 
-/* Loading spinner */
 @keyframes spin { to { transform: rotate(360deg); } }
 .spinner { animation: spin 0.7s linear infinite; }
 
@@ -324,17 +306,14 @@ body::before {
 }
 .live-dot { animation: pulse-dot 1.2s ease-in-out infinite; }
 
-/* Trend indicators */
 .trend-up   { color: var(--success); font-weight: 900; }
 .trend-down { color: var(--danger);  font-weight: 900; }
 .trend-same { color: var(--text-muted); font-weight: 700; }
 
-/* Gradient text utility -> aksen teal solid */
 .grad-teal {
   color: #0284a8;
 }
 
-/* Status toast brutalist */
 .toast {
   display: flex;
   align-items: center;
@@ -357,7 +336,6 @@ body::before {
   flex-shrink: 0;
 }
 
-/* TV mode bar */
 .tv-bar {
   background: var(--ink);
   border: 3px solid var(--ink);
@@ -372,7 +350,6 @@ body::before {
   gap: 8px;
 }
 
-/* Responsive layout vars */
 @media (max-height: 700px) {
   :root { font-size: 12px; }
 }

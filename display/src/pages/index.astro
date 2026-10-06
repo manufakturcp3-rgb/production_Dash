@@ -19,7 +19,7 @@
   </head>
 
   <body>
-    <!-- Ikon dekorasi terbang -->
+    
     <div class="float-deco" aria-hidden="true">
       <span style="top:12%; left:3%; font-size:34px; animation-duration:7s;">🏭</span>
       <span style="top:8%; left:28%; font-size:26px; animation-duration:9s; animation-delay:-2s;">⚙️</span>
@@ -35,7 +35,7 @@
 
     <div id="app" class="app-wrapper">
 
-      <!-- ====== HEADER ====== -->
+      
       <header class="glass main-header" id="mainHeader">
         <div class="header-logos">
           <img
@@ -54,10 +54,10 @@
         </div>
       </header>
 
-      <!-- ====== BODY: rail kiri + 9 kotak ====== -->
+      
       <main class="dash-grid">
 
-        <!-- === RAIL KIRI === -->
+        
         <aside class="rail-col">
           <div class="glass pill" id="productPill" onclick="cycleProduct()" title="Klik untuk ganti produk">
             <div class="pill-cap">PRODUK</div>
@@ -83,9 +83,9 @@
           </div>
         </aside>
 
-        <!-- === 9 KOTAK 3x3 === -->
+        
         <section class="boxes-grid">
-          <!-- Baris 1 -->
+          
           <div class="glass box">
             <div class="box-label">STANDARD / OUTPUT <span>shiftly</span></div>
             <div class="box-value success" id="boxOutput">—</div>
@@ -99,7 +99,7 @@
             <div class="box-value gold" id="boxProductScore">—</div>
           </div>
 
-          <!-- Baris 2 -->
+          
           <div class="glass box">
             <div class="box-label">YIELD <span>shiftly</span></div>
             <div class="box-value teal" id="boxYield">—</div>
@@ -113,7 +113,7 @@
             <div class="box-value teal" id="boxSr">—</div>
           </div>
 
-          <!-- Baris 3 -->
+          
           <div class="glass box">
             <div class="box-label">WASTE <span>shiftly</span></div>
             <div class="box-value danger" id="boxWaste">—</div>
@@ -130,7 +130,7 @@
 
       </main>
 
-      <!-- ====== FOOTER ====== -->
+      
       <footer class="footer-bar">
         <div id="tvBar" class="tv-bar" style="display:none;">
           <div class="toast-dot live-dot" style="background:red; flex-shrink:0;"></div>
@@ -160,7 +160,7 @@
 
     </div>
 
-    <!-- ====== LAYOUT STYLES ====== -->
+    
     <style>
       html, body { overflow: hidden; height: 100%; }
 
@@ -178,7 +178,7 @@
       .header-logos { display: flex; gap: 8px; align-items: center; }
       .header-right { display: flex; align-items: center; }
 
-      /* Grid utama: rail kiri + 9 kotak */
+      
       .dash-grid {
         flex: 1;
         min-height: 0;
@@ -204,7 +204,7 @@
         letter-spacing: 0.06em;
       }
 
-      /* Kartu foreman: mengisi sisa tinggi rail */
+      
       .foreman-card {
         flex: 1;
         min-height: 0;
@@ -279,7 +279,7 @@
         max-width: 100%;
       }
 
-      /* 9 kotak 3x3 */
+      
       .boxes-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -348,7 +348,7 @@
         letter-spacing: 0.05em;
       }
 
-      /* List Top 5 di dalam kotak */
+      
       .box-top5 {
         list-style: none;
         display: flex;
@@ -410,13 +410,12 @@
       }
     </style>
 
-    <!-- ====== SCRIPT UTAMA ====== -->
-    <script type="module">
-      // Backend: Apps Script Web App (lihat folder backend/).
-      // Isi PUBLIC_BACKEND_URL di .env lokal & env Vercel dengan URL .../exec.
+    
+    <script type="module">      
+      
       const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || '';
 
-      // ---- State ----
+      
       const PRODUCTS = ['SIOMAY','UDANG KEJU','PENTOL','ADONAN PANGSIT','AYAM CINCANG','LUMPIA','KERUPUK MIE','KULIT PANGSIT','MIE','CABAI'];
       const SHIFTS   = ['Shift 1','Shift 2','Shift 3','ALL SHIFT'];
       let productIdx = 0, shiftIdx = 1;
@@ -432,11 +431,11 @@
       let tvCombos = [];
       let tvIndex = 0;
 
-      // ---- Init ----
+      
       window.addEventListener('DOMContentLoaded', () => {
         updatePills();
         loadDashboardData();
-        setInterval(loadDashboardData, 3 * 60 * 1000); // refresh tiap 3 menit
+        setInterval(loadDashboardData, 3 * 60 * 1000); 
       });
 
       function updatePills() {
@@ -460,7 +459,7 @@
         loadDashboardData();
       };
 
-      // ---- Load data dari Backend (Apps Script Web App) ----
+      
       async function loadDashboardData() {
         const seq = ++reqSeq;
 
@@ -478,7 +477,7 @@
           const json = await res.json();
           if (!json || json.ok === false) throw new Error((json && json.error) || 'backend error');
 
-          if (seq !== reqSeq) return; // Stale response
+          if (seq !== reqSeq) return; 
 
           const lb = json.leaderboard || {};
           renderDashboard(json.dashboard || [], lb.ranking || [], lb.foremen || [], { timestamp: json.timestamp });
@@ -489,7 +488,7 @@
         }
       }
 
-      // ---- Render Dashboard ----
+      
       function renderDashboard(dashData, rank5r, foreman5r, syncData) {
         const selectedProduct = PRODUCTS[productIdx];
         const selectedShift   = SHIFTS[shiftIdx];
@@ -518,7 +517,7 @@
         }
       }
 
-      // ---- Ekstrak KPI dari data dashboard_khusus ----
+      
       function extractKPIs(rows, selectedProduct, selectedShift) {
         const kpis = {
           output: null, stdPlan: null,
@@ -544,7 +543,7 @@
           return isNaN(n) ? null : n;
         }
 
-        // Kolom shiftly: harus cocok produk + shift
+        
         function findShiftly(kpiType) {
           for (const key of allKeys) {
             const k = key.toLowerCase();
@@ -558,7 +557,7 @@
           return null;
         }
 
-        // Kolom monthly: cocok produk dulu, abaikan shift; fallback cocok tipe saja
+        
         function findMonthly(tests) {
           const preds = Array.isArray(tests) ? tests : [tests];
           for (const key of allKeys) {
@@ -579,13 +578,13 @@
           return null;
         }
 
-        // Shiftly
+        
         kpis.output  = findShiftly('actual') || findShiftly('output') || findShiftly('fg');
         kpis.stdPlan = findShiftly('std') || findShiftly('ppic') || findShiftly('standard');
         kpis.yield   = findShiftly('yield');
         kpis.waste   = findShiftly('waste') || findShiftly('reject');
 
-        // Monthly (abaikan shift)
+        
         kpis.gmp          = findMonthly(k => k.includes('gmp'));
         kpis.sr           = findMonthly([k => k.includes('5r'), k => /(^|_)sr($|_)/.test(k)]);
         kpis.processScore = findMonthly([k => k.includes('process'), k => k.includes('proses')]);
@@ -626,7 +625,7 @@
         };
       }
 
-      // ---- Box 8-9: TOP 5 LATE / TOP 5 OVERTIME (weekly, dari sheet Leaderboard 5R) ----
+      
       function renderTop5(ranking) {
         const lateEl = document.getElementById('boxLate');
         const otEl   = document.getElementById('boxOt');
@@ -643,7 +642,7 @@
           : ots.map((n, i) => `<li><span class="top5-rank">${medals[i] || (i+1)}</span><span>${escapeHtml(String(n))}</span></li>`).join('');
       }
 
-      // ---- Rail kiri: FOREMAN PRODUKSI (foto by IMG URL dari sheet Leaderboard 5R) ----
+      
       const PROD_ALIAS = {
         'KERUPUK MIE': ['KM/KP', 'KERUPUK MIE', 'KM', 'MIE'],
         'KULIT PANGSIT': ['KM/KP', 'KULIT PANGSIT', 'KP'],
@@ -711,7 +710,7 @@
         return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
       }
 
-      // ---- Isi kotak ----
+      
       function setBox(elId, value, colorClass) {
         const el = document.getElementById(elId);
         if (!value) {
@@ -732,7 +731,7 @@
         el.style.color = '';
       }
 
-      // ---- Status sync indicator ----
+      
       function setSyncStatus(status) {
         const dot  = document.getElementById('syncDot');
         const text = document.getElementById('syncText');
@@ -751,7 +750,7 @@
         }
       }
 
-      // ---- TV Mode ----
+      
       window.toggleTvMode = function() {
         tvActive = !tvActive;
         const btn = document.getElementById('tvBtn');
