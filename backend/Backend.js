@@ -3,7 +3,7 @@ const BACKEND_CONFIG = {
     spreadsheetId: '1OrmtFMggqx0j5uW_X5Nxfo23ty61F7m6ppKWEPvPu0s',
     sheetName: 'DASHBOARD KHUSUS',
     startRow: 6,
-    maxRows: 15 
+    maxRows: 8
   },
   LEADERBOARD: {
     spreadsheetId: '146f5qPWBsDEyIn1e6WpjN-bfkGZXwGQfdqlybhsXdS4',
