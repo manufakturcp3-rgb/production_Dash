@@ -13,11 +13,5 @@
   },
   "dependencies": {
     "astro": "^7.3.5"
-  },
-  "allowScripts": {
-    "esbuild": true
-  },
-  "devDependencies": {
-    "@supabase/supabase-js": "^2.117.2"
   }
 }

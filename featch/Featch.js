@@ -260,7 +260,14 @@ function featchSource3() {
       if (String(all[i].getName() || '').toLowerCase().trim() === want) { sheet = all[i]; break; }
     }
   }
-  if (!sheet) throw new Error('Sheet tidak ditemukan: ' + cfg.sheetName);
+  if (!sheet) {
+    // Tampilkan semua nama sheet agar mudah dicocokkan (copy dari log ini)
+    try {
+      const names = ss.getSheets().map(function (s) { return s.getName(); }).join(' | ');
+      Logger.log('[FEATCH] Daftar sheet di spreadsheet target: ' + names);
+    } catch (e) { /* abaikan */ }
+    throw new Error('Sheet tidak ditemukan: ' + cfg.sheetName);
+  }
 
   const lastRow = sheet.getLastRow();
   const lastCol = sheet.getLastColumn();

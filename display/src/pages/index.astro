@@ -9,7 +9,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="Dashboard produksi Central Production 3 Majalengka — monitor KPI shiftly/monthly/weekly dari Supabase." />
+    <meta name="description" content="Dashboard produksi Central Production 3 Majalengka — monitor KPI shiftly/monthly/weekly, data live dari Web App." />
     <title>Central Production 3 Majalengka — Dashboard Produksi</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -412,11 +412,9 @@
 
     <!-- ====== SCRIPT UTAMA ====== -->
     <script type="module">
-      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-      const SUPABASE_URL = 'https://awnjjzyyyxflvhpsnwby.supabase.co';
-      const SUPABASE_KEY = 'sb_publishable_F2QptrbgTXqFo8pZvtNgZg_mAfhuUSS';
-      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+      // Backend: Apps Script Web App (lihat folder backend/).
+      // Isi PUBLIC_BACKEND_URL di .env lokal & env Vercel dengan URL .../exec.
+      const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || '';
 
       // ---- State ----
       const PRODUCTS = ['SIOMAY','UDANG KEJU','PENTOL','ADONAN PANGSIT','AYAM CINCANG','LUMPIA','KERUPUK MIE','KULIT PANGSIT','MIE','CABAI'];
@@ -438,8 +436,7 @@
       window.addEventListener('DOMContentLoaded', () => {
         updatePills();
         loadDashboardData();
-        subscribeRealtime();
-        setInterval(loadDashboardData, 5 * 60 * 1000); // refresh tiap 5 menit
+        setInterval(loadDashboardData, 3 * 60 * 1000); // refresh tiap 3 menit
       });
 
       function updatePills() {
@@ -463,29 +460,28 @@
         loadDashboardData();
       };
 
-      // ---- Load data dari Supabase ----
+      // ---- Load data dari Backend (Apps Script Web App) ----
       async function loadDashboardData() {
         const seq = ++reqSeq;
+
+        if (!BACKEND_URL) {
+          setSyncStatus('error');
+          document.getElementById('syncText').textContent = 'Backend belum diset';
+          console.error('[DASHBOARD] PUBLIC_BACKEND_URL kosong. Isi di .env / env Vercel.');
+          return;
+        }
         setSyncStatus('loading');
 
         try {
-          const [{ data: dashData, error: dashErr }, { data: rank5r }, { data: foreman5r }] = await Promise.all([
-            supabase.from('dashboard_khusus').select('*').order('row_index', { ascending: false }).limit(200),
-            supabase.from('leaderboard_5r_ranking').select('*').order('rank', { ascending: true }).limit(20),
-            supabase.from('leaderboard_5r_foreman').select('*').order('row_index', { ascending: true }).limit(50)
-          ]);
-
-          if (dashErr) throw dashErr;
-
-          const { data: syncData } = await supabase
-            .from('sync_log')
-            .select('*')
-            .eq('id', 'last_sync')
-            .single();
+          const res = await fetch(BACKEND_URL + '?action=all', { cache: 'no-store' });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const json = await res.json();
+          if (!json || json.ok === false) throw new Error((json && json.error) || 'backend error');
 
           if (seq !== reqSeq) return; // Stale response
 
-          renderDashboard(dashData || [], rank5r || [], foreman5r || [], syncData);
+          const lb = json.leaderboard || {};
+          renderDashboard(json.dashboard || [], lb.ranking || [], lb.foremen || [], { timestamp: json.timestamp });
           setSyncStatus('ok');
         } catch (err) {
           console.error('[DASHBOARD] Error:', err.message);
@@ -753,16 +749,6 @@
           dot.style.animation   = 'none';
           text.textContent = 'Offline';
         }
-      }
-
-      // ---- Realtime subscription ----
-      function subscribeRealtime() {
-        supabase
-          .channel('dashboard_changes')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'sync_log' }, () => {
-            loadDashboardData();
-          })
-          .subscribe();
       }
 
       // ---- TV Mode ----
