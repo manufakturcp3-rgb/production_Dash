@@ -472,10 +472,22 @@
         setSyncStatus('loading');
 
         try {
-          const res = await fetch(BACKEND_URL + '?action=all', { cache: 'no-store' });
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          const json = await res.json();
-          if (!json || json.ok === false) throw new Error((json && json.error) || 'backend error');
+          let json = null;
+          let lastErr = null;
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+              const res = await fetch(BACKEND_URL + '?action=all', { cache: 'no-store' });
+              if (!res.ok) throw new Error('HTTP ' + res.status);
+              const body = await res.json();
+              if (!body || body.ok === false) throw new Error((body && body.error) || 'backend error');
+              json = body;
+              break;
+            } catch (e) {
+              lastErr = e;
+              if (attempt < 3) await new Promise(function (r) { setTimeout(r, 2000); });
+            }
+          }
+          if (!json) throw lastErr || new Error('backend error');
 
           if (seq !== reqSeq) return; 
 
