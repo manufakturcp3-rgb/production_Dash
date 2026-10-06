@@ -1,0 +1,1050 @@
+---
+// src/pages/index.astro
+// Central Plant 3 Majalengka — Production Dashboard
+---
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Dashboard produksi Central Plant 3 Majalengka — monitor KPI, Process Score, dan data real-time dari Supabase." />
+    <title>Central Plant 3 Majalengka — Dashboard Produksi</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles/global.css" />
+  </head>
+
+  <body>
+    <div id="app" class="app-wrapper">
+
+      <!-- ====== HEADER ====== -->
+      <header class="glass main-header" id="mainHeader">
+        <div class="header-logos">
+          <img
+            src="https://bkk.smk-unsur.sch.id/assets/logo_perusahaan/25d7a6441a1880fddfb6a915546feb0a.png"
+            alt="Logo Perusahaan"
+            class="header-logo"
+            onerror="this.style.display='none'"
+          />
+        </div>
+        <h1>CENTRAL PLANT 3 MAJALENGKA</h1>
+        <div class="header-right">
+          <div class="toast" id="syncToast">
+            <div class="toast-dot live-dot" id="syncDot" style="background: #64748b;"></div>
+            <span id="syncText">Menghubungkan...</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- ====== BODY GRID ====== -->
+      <main class="body-grid">
+
+        <!-- === KOLOM KIRI (sidebar) === -->
+        <aside class="sidebar-col">
+
+          <!-- Pill Filter Produk -->
+          <div class="glass pill" id="productPill" onclick="cycleProduct()" title="Klik untuk ganti produk">
+            <div style="font-size:10px; opacity:0.5; margin-bottom:2px;">PRODUK</div>
+            <div id="productLabel">—</div>
+          </div>
+
+          <!-- Pill Filter Shift -->
+          <div class="glass pill" id="shiftPill" onclick="cycleShift()" title="Klik untuk ganti shift">
+            <div style="font-size:10px; opacity:0.5; margin-bottom:2px;">SHIFT</div>
+            <div id="shiftLabel">—</div>
+          </div>
+
+          <!-- Tanggal data -->
+          <div class="glass pill" style="cursor:default; font-size:12px; padding:10px 14px;">
+            <div style="font-size:10px; opacity:0.5; margin-bottom:2px;">TANGGAL DATA</div>
+            <div id="dateDateLabel" style="font-weight:800;">—</div>
+          </div>
+
+          <!-- KPI Yield -->
+          <div class="glass kpi-card" style="flex:1;">
+            <div class="kpi-label">YIELD <span>shiftly</span></div>
+            <div class="kpi-value teal" id="yieldVal">—</div>
+          </div>
+
+          <!-- KPI Productivity -->
+          <div class="glass kpi-card" style="flex:1;">
+            <div class="kpi-label">PRODUCTIVITY <span>shiftly</span></div>
+            <div class="kpi-value teal" id="productivityVal">—</div>
+          </div>
+
+          <!-- KPI GMP -->
+          <div class="glass kpi-card" style="flex:1;">
+            <div class="kpi-label">GMP <span>monthly</span></div>
+            <div class="kpi-value teal" id="gmpVal">—</div>
+          </div>
+
+        </aside>
+
+        <!-- === KOLOM TENGAH (leaderboard) === -->
+        <section class="glass center-col">
+
+          <!-- Header leaderboard -->
+          <div class="leaderboard-title">
+            <span>RANKING &amp; PROCESS SCORE AREA — CP3</span>
+            <span class="grad-teal" id="periodLabel" style="font-size:12px; font-weight:600;"></span>
+          </div>
+
+          <div class="leaderboard-content">
+            <!-- List + avatars grid -->
+            <div class="leaderboard-grid">
+
+              <!-- List baris -->
+              <div class="list-col">
+                <div class="leader-header">
+                  <div>RK</div>
+                  <div>AREA &amp; LEADER</div>
+                  <div></div>
+                  <div style="text-align:center;">LALU</div>
+                  <div style="text-align:center;">INI</div>
+                  <div style="text-align:center;">TARGET</div>
+                  <div style="text-align:center;">↕</div>
+                </div>
+                <ul id="leaderList" style="overflow-y:auto; flex:1; list-style:none; display:flex; flex-direction:column; gap:4px; padding-right:4px;">
+                  <li style="text-align:center; color: var(--text-muted); padding: 20px;">Memuat data...</li>
+                </ul>
+              </div>
+
+              <!-- Avatar column -->
+              <div class="avatar-col">
+                <!-- TOP 1 -->
+                <div class="avatar-section">
+                  <div class="avatar-wrapper">
+                    <img id="avatarTop" src="" alt="Top 1" class="avatar-img avatar-top" style="display:none;" />
+                    <div id="avatarTopPlaceholder" class="avatar-img avatar-top" style="display:flex; align-items:center; justify-content:center; background:rgba(16,185,129,0.1); font-size:20px;">👑</div>
+                    <div class="avatar-badge badge-crown" title="Top Area">★</div>
+                  </div>
+                  <div id="avatarTopName" style="font-size:10px; font-weight:800; margin-top:4px; text-align:center; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color: var(--text-primary);">N/A</div>
+                  <div id="avatarTopSub" style="font-size:9px; color: var(--success); font-weight:600; text-align:center; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">—</div>
+                </div>
+
+                <div class="grad-divider"></div>
+
+                <!-- LOWEST -->
+                <div class="avatar-section">
+                  <div class="avatar-wrapper">
+                    <img id="avatarBad" src="" alt="Terendah" class="avatar-img avatar-bad" style="display:none;" />
+                    <div id="avatarBadPlaceholder" class="avatar-img avatar-bad" style="display:flex; align-items:center; justify-content:center; background:rgba(244,63,94,0.1); font-size:20px;">⚠️</div>
+                    <div class="avatar-badge badge-warn" title="Area Terendah">!</div>
+                  </div>
+                  <div id="avatarBadName" style="font-size:10px; font-weight:800; margin-top:4px; text-align:center; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color: var(--text-primary);">N/A</div>
+                  <div id="avatarBadSub" style="font-size:9px; color: var(--danger); font-weight:600; text-align:center; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">—</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Leaderboard 5R: Foreman + Top Late / Top Overtime (dari sheet Leaderboard 5R via Supabase) -->
+          <div class="leader5r-panel">
+            <div class="leader5r-col foreman-col">
+              <div class="leader5r-head">👷 FOREMAN — <span id="foremanProdLabel" class="grad-teal">—</span></div>
+              <div class="foreman-strip" id="foremanStrip">
+                <div style="font-size:10px; color:var(--text-muted);">Memuat...</div>
+              </div>
+            </div>
+            <div class="leader5r-col">
+              <div class="leader5r-head">⏰ TOP LATE</div>
+              <ol id="topLateList" class="top5-list"><li>Memuat...</li></ol>
+            </div>
+            <div class="leader5r-col">
+              <div class="leader5r-head">🌙 TOP OVERTIME</div>
+              <ol id="topOtList" class="top5-list"><li>Memuat...</li></ol>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- === KOLOM KANAN === -->
+        <aside class="right-col">
+
+          <!-- KPI Plan PPIC -->
+          <div class="glass kpi-card" style="flex:1;">
+            <div class="kpi-label">PLAN PPIC <span>shiftly</span></div>
+            <div class="kpi-value magenta" id="planVal">—</div>
+          </div>
+
+          <!-- KPI Waste -->
+          <div class="glass kpi-card" style="flex:1;">
+            <div class="kpi-label">WASTE <span>shiftly</span></div>
+            <div class="kpi-value danger" id="wasteVal">—</div>
+          </div>
+
+          <!-- KPI Output vs Std Plan -->
+          <div class="glass kpi-card" style="flex:2;">
+            <div class="kpi-label">ACTUAL / STD PLAN PPIC <span>shiftly</span></div>
+            <div class="kpi-value success" id="outputVal" style="font-size:clamp(14px,2.2vh,22px);">—</div>
+          </div>
+
+          <!-- KPI 5R -->
+          <div class="glass kpi-card" style="flex:1;">
+            <div class="kpi-label">5R <span>monthly</span></div>
+            <div class="kpi-value teal" id="srVal">—</div>
+          </div>
+
+          <!-- KPI Process Score -->
+          <div class="glass kpi-card" style="flex:1;">
+            <div class="kpi-label">PROCESS SCORE <span>monthly</span></div>
+            <div class="kpi-value teal" id="processVal">—</div>
+          </div>
+
+          <!-- KPI Product Score -->
+          <div class="glass kpi-card" style="flex:1;">
+            <div class="kpi-label">PRODUCT SCORE <span>monthly</span></div>
+            <div class="kpi-value gold" id="productScoreVal">—</div>
+          </div>
+
+        </aside>
+
+      </main>
+
+      <!-- ====== FOOTER ====== -->
+      <footer class="footer-bar">
+        <div id="tvBar" class="tv-bar" style="display:none;">
+          <div class="toast-dot live-dot" style="background:red; flex-shrink:0;"></div>
+          <span id="tvBarText">Mode TV</span>
+          <span id="tvBarCount" style="font-weight:900; tabular-nums;">0</span>s
+        </div>
+
+        <div style="flex:1;"></div>
+
+        <div style="font-size:11px; color: var(--text-muted); font-weight:600;">
+          Update terakhir: <span id="lastUpdateTime" style="color: var(--text-secondary);">—</span>
+        </div>
+
+        <!-- TV Mode controls -->
+        <div class="glass" style="padding: 6px 12px; border-radius: 14px; display:flex; align-items:center; gap:8px;">
+          <select id="tvInterval" class="filter-select" style="font-size:12px; width:auto; font-weight:700;" onchange="onTvIntervalChange()">
+            <option value="5000">5 dtk</option>
+            <option value="8000" selected>8 dtk</option>
+            <option value="15000">15 dtk</option>
+            <option value="30000">30 dtk</option>
+          </select>
+          <button id="tvBtn" onclick="toggleTvMode()"
+            style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 5px 12px; color: var(--text-primary); font-family: inherit; font-weight: 700; font-size: 11px; cursor: pointer; transition: all 0.2s; letter-spacing:0.04em;">
+            ▶ Mode TV
+          </button>
+        </div>
+      </footer>
+
+    </div>
+
+    <!-- ====== INLINE STYLES untuk layout ====== -->
+    <style>
+      html, body { overflow: hidden; height: 100%; }
+
+      .app-wrapper {
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 10px;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Header */
+      #mainHeader {
+        flex-shrink: 0;
+        min-height: 58px;
+      }
+      .header-logos { display: flex; gap: 8px; align-items: center; }
+      .header-right { display: flex; align-items: center; }
+
+      /* Body 3-col grid */
+      .body-grid {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(160px, 20%) 1fr minmax(160px, 20%);
+        gap: 8px;
+        overflow: hidden;
+      }
+
+      /* Sidebar kolom kiri */
+      .sidebar-col {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        overflow: hidden;
+      }
+
+      /* Center column */
+      .center-col {
+        display: flex;
+        flex-direction: column;
+        padding: 14px;
+        overflow: hidden;
+      }
+
+      .leaderboard-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-secondary);
+        margin-bottom: 10px;
+        flex-shrink: 0;
+      }
+
+      .leaderboard-content {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .leaderboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 88px;
+        gap: 10px;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .list-col {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .avatar-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-around;
+        padding: 4px 0;
+        gap: 8px;
+      }
+
+      .avatar-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+
+      /* Kanan */
+      .right-col {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        overflow: hidden;
+      }
+
+      /* Footer */
+      .footer-bar {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 4px;
+        font-size: 11px;
+      }
+
+      /* Leaderboard 5R bottom panel */
+      .leader5r-panel {
+        flex-shrink: 0;
+        display: grid;
+        grid-template-columns: 1.4fr 1fr 1fr;
+        gap: 8px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border);
+        min-height: 132px;
+        max-height: 168px;
+        overflow: hidden;
+      }
+      .leader5r-col {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 12px;
+        padding: 8px 10px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      .leader5r-head {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.07em;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .foreman-strip {
+        display: flex;
+        gap: 8px;
+        flex: 1;
+        min-height: 0;
+        align-items: stretch;
+      }
+      .foreman-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        min-width: 0;
+      }
+      .foreman-img {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--teal);
+        background: rgba(0,179,216,0.1);
+        flex-shrink: 0;
+      }
+      .foreman-ph {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 900;
+        background: rgba(0,179,216,0.12);
+        border: 2px dashed rgba(0,179,216,0.4);
+        color: var(--teal);
+        flex-shrink: 0;
+      }
+      .foreman-name {
+        font-size: 9px;
+        font-weight: 700;
+        text-align: center;
+        line-height: 1.2;
+        max-height: 22px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        color: var(--text-primary);
+        word-break: break-word;
+      }
+      .top5-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        overflow: hidden;
+        flex: 1;
+        margin: 0;
+        padding: 0;
+      }
+      .top5-list li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 10px;
+        font-weight: 600;
+        background: rgba(255,255,255,0.04);
+        border-radius: 8px;
+        padding: 3px 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .top5-rank {
+        font-weight: 900;
+        color: var(--gold);
+        min-width: 14px;
+        text-align: center;
+      }
+
+      /* Responsive */
+      @media (max-width: 900px) {
+        .body-grid {
+          grid-template-columns: 1fr 1fr;
+          grid-template-rows: auto auto;
+        }
+        .center-col {
+          grid-column: 1 / -1;
+          grid-row: 1;
+        }
+        .sidebar-col { grid-row: 2; }
+        .right-col   { grid-row: 2; }
+      }
+    </style>
+
+    <!-- ====== SCRIPT UTAMA ====== -->
+    <script type="module">
+      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+      const SUPABASE_URL = 'https://awnjjzyyyxflvhpsnwby.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_F2QptrbgTXqFo8pZvtNgZg_mAfhuUSS';
+      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // ---- State ----
+      const PRODUCTS = ['SIOMAY','UDANG KEJU','PENTOL','ADONAN PANGSIT','AYAM CINCANG','LUMPIA','KERUPUK MIE','KULIT PANGSIT','MIE','CABAI'];
+      const SHIFTS   = ['Shift 1','Shift 2','Shift 3','ALL SHIFT'];
+      let productIdx = 0, shiftIdx = 1;
+
+      const PRODUCT_COLORS = {
+        'SIOMAY':'#00b3d8','UDANG KEJU':'#ec008d','PENTOL':'#10b981',
+        'ADONAN PANGSIT':'#a78bfa','AYAM CINCANG':'#f97316','LUMPIA':'#ec4899',
+        'KERUPUK MIE':'#f59e0b','KULIT PANGSIT':'#14b8a6','MIE':'#6366f1','CABAI':'#22c55e'
+      };
+
+      let tvActive = false, tvTimer = null, tvCountdown = 0, tvCountTimer = null;
+      let reqSeq = 0;
+      let tvCombos = [];
+      let tvIndex = 0;
+
+      // ---- Init ----
+      window.addEventListener('DOMContentLoaded', () => {
+        updatePills();
+        loadDashboardData();
+        subscribeRealtime();
+        setInterval(loadDashboardData, 5 * 60 * 1000); // refresh tiap 5 menit
+      });
+
+      function updatePills() {
+        document.getElementById('productLabel').textContent = PRODUCTS[productIdx];
+        document.getElementById('shiftLabel').textContent   = SHIFTS[shiftIdx];
+        const color = PRODUCT_COLORS[PRODUCTS[productIdx]] || '#00b3d8';
+        document.getElementById('productLabel').style.color = color;
+      }
+
+      window.cycleProduct = function() {
+        if (tvActive) return;
+        productIdx = (productIdx + 1) % PRODUCTS.length;
+        updatePills();
+        loadDashboardData();
+      };
+
+      window.cycleShift = function() {
+        if (tvActive) return;
+        shiftIdx = (shiftIdx + 1) % SHIFTS.length;
+        updatePills();
+        loadDashboardData();
+      };
+
+      // ---- Load data dari Supabase ----
+      async function loadDashboardData() {
+        const seq = ++reqSeq;
+        setSyncStatus('loading');
+
+        try {
+          // Fetch data Source 2 (DASHBOARD KHUSUS) untuk KPI produksi
+          const { data: dashData, error: dashErr } = await supabase
+            .from('dashboard_khusus')
+            .select('*')
+            .order('row_index', { ascending: false })
+            .limit(200);
+
+          if (dashErr) throw dashErr;
+
+          // Fetch data Source 1 (WebData_Produk) untuk Process Score, GMP, dll
+          const { data: prodData, error: prodErr } = await supabase
+            .from('webdata_produk')
+            .select('*')
+            .limit(500);
+
+          if (prodErr) throw prodErr;
+
+          // Fetch sync log
+          const { data: syncData } = await supabase
+            .from('sync_log')
+            .select('*')
+            .eq('id', 'last_sync')
+            .single();
+
+          // Fetch Leaderboard 5R (Top Late/Overtime + Foreman + foto img URL)
+          const [{ data: rank5r }, { data: foreman5r }] = await Promise.all([
+            supabase.from('leaderboard_5r_ranking').select('*').order('rank', { ascending: true }).limit(20),
+            supabase.from('leaderboard_5r_foreman').select('*').order('row_index', { ascending: true }).limit(50)
+          ]);
+
+          if (seq !== reqSeq) return; // Stale response
+
+          renderDashboard(dashData || [], prodData || [], syncData, rank5r || [], foreman5r || []);
+          setSyncStatus('ok');
+        } catch (err) {
+          console.error('[DASHBOARD] Error:', err.message);
+          if (seq === reqSeq) setSyncStatus('error');
+        }
+      }
+
+      // ---- Render Dashboard ----
+      function renderDashboard(dashData, prodData, syncData, rank5r = [], foreman5r = []) {
+        const selectedProduct = PRODUCTS[productIdx];
+        const selectedShift   = SHIFTS[shiftIdx];
+
+        // --- Proses data produk dari Source 2 ---
+        // Cari kolom yang cocok dengan produk & shift pilihan
+        const kpis = extractKPIs(dashData, selectedProduct, selectedShift);
+
+        // --- Render KPI cards ---
+        setKPI('yieldVal',       kpis.yield,        'teal');
+        setKPI('productivityVal',kpis.productivity, 'teal');
+        setKPI('gmpVal',         kpis.gmp,          'teal');
+        setKPI('planVal',        kpis.plan,         'magenta');
+        setKPI('wasteVal',       kpis.waste,        'danger');
+        setKPI('outputVal',      kpis.outputVsStd,  'success', true);
+        setKPI('srVal',          kpis.sr,           'teal');
+        setKPI('processVal',     kpis.processScore, 'teal');
+        setKPI('productScoreVal',kpis.productScore, 'gold');
+
+        // --- Tanggal data ---
+        document.getElementById('dateDateLabel').textContent = kpis.dateLabel || '—';
+
+        // --- Process Score Leaderboard (dari Source 1) ---
+        const leaderData = buildLeaderboard(prodData);
+        renderLeaderboard(leaderData);
+
+        // --- Leaderboard 5R (dari sheet Leaderboard 5R via Supabase) ---
+        renderLeader5R(rank5r, foreman5r, selectedProduct);
+
+        // --- Sync timestamp ---
+        if (syncData && syncData.timestamp) {
+          const d = new Date(syncData.timestamp);
+          document.getElementById('lastUpdateTime').textContent = d.toLocaleString('id-ID', {
+            day:'2-digit', month:'short', year:'numeric',
+            hour:'2-digit', minute:'2-digit'
+          });
+        }
+      }
+
+      // ---- Ekstrak KPI dari data dashboard_khusus ----
+      function extractKPIs(rows, selectedProduct, selectedShift) {
+        // Data rows adalah array of objects dengan key = nama kolom gabungan
+        // Format key: produk__kategori__shift (dari sanitizeKey di Featch.js)
+        // Cari baris terbaru yang punya data
+        const kpis = {
+          plan: null, output: null, stdPlan: null,
+          yield: null, waste: null, productivity: null,
+          gmp: 'No Data', processScore: 'No Data', productScore: 'No Data', sr: 'No Data',
+          outputVsStd: null, dateLabel: null
+        };
+
+        if (!rows || rows.length === 0) return formatKPIs(kpis);
+
+        // Ambil baris terbaru yang ada tanggal-nya
+        const latestRow = rows.find(r => r.tanggal && r.tanggal !== null) || rows[0];
+        if (latestRow && latestRow.tanggal) {
+          kpis.dateLabel = String(latestRow.tanggal).substring(0, 10);
+        }
+
+        // Cari kolom yang match dengan produk & shift
+        const prodKey   = selectedProduct.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const shiftKey  = selectedShift.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const isAllShift = selectedShift === 'ALL SHIFT';
+
+        const allKeys = Object.keys(latestRow);
+
+        // Fungsi match nama kolom ke KPI type
+        function findColVal(row, kpiType) {
+          for (const key of allKeys) {
+            const k = key.toLowerCase();
+            const matchProd  = k.includes(prodKey) || prodKey.split('_').some(p => p.length > 2 && k.includes(p));
+            const matchShift = isAllShift || k.includes(shiftKey);
+            const matchKPI   = k.includes(kpiType);
+            if (matchProd && matchShift && matchKPI) {
+              const v = parseFloat(String(row[key] || '').replace(/[^0-9.-]/g,''));
+              if (!isNaN(v)) return v;
+            }
+          }
+          return null;
+        }
+
+        kpis.output      = findColVal(latestRow, 'actual') || findColVal(latestRow, 'output') || findColVal(latestRow, 'fg');
+        kpis.stdPlan     = findColVal(latestRow, 'std') || findColVal(latestRow, 'ppic') || findColVal(latestRow, 'standard');
+        kpis.plan        = findColVal(latestRow, 'plan') || kpis.stdPlan;
+        kpis.yield       = findColVal(latestRow, 'yield');
+        kpis.waste       = findColVal(latestRow, 'waste') || findColVal(latestRow, 'reject');
+        kpis.productivity= findColVal(latestRow, 'product') || findColVal(latestRow, 'produk');
+
+        return formatKPIs(kpis);
+      }
+
+      function formatKPIs(kpis) {
+        function fmt(v, suffix='', isPercent=false) {
+          if (v === null || v === undefined || isNaN(v)) return null;
+          if (isPercent) {
+            const pct = v <= 1 ? v * 100 : v;
+            return pct.toFixed(1) + '%';
+          }
+          return Math.round(v).toLocaleString('id-ID') + (suffix ? ' ' + suffix : '');
+        }
+
+        return {
+          plan:         fmt(kpis.plan, 'Kg'),
+          output:       fmt(kpis.output, 'Pack'),
+          stdPlan:      fmt(kpis.stdPlan, 'Pack'),
+          yield:        fmt(kpis.yield, '', true),
+          waste:        fmt(kpis.waste, 'Kg'),
+          productivity: kpis.productivity !== null ? (kpis.productivity <= 1 ? (kpis.productivity*100).toFixed(1) : kpis.productivity.toFixed(1)) + ' Kg/MP' : null,
+          gmp:          kpis.gmp,
+          processScore: kpis.processScore,
+          productScore: kpis.productScore,
+          sr:           kpis.sr,
+          outputVsStd:  (kpis.output !== null && kpis.stdPlan !== null)
+                          ? `${fmt(kpis.output)} / ${fmt(kpis.stdPlan)} Pack`
+                          : fmt(kpis.output, 'Pack'),
+          dateLabel:    kpis.dateLabel
+        };
+      }
+
+      // ---- Build leaderboard dari Source 1 ----
+      function buildLeaderboard(prodData) {
+        // Source 1 (WebData_Produk) berisi data audit/skor area
+        // Cari kolom yang memiliki skor Process Score
+        if (!prodData || prodData.length === 0) return [];
+
+        const keys = Object.keys(prodData[0] || {});
+        const scoreKey = keys.find(k =>
+          k.toLowerCase().includes('process') ||
+          k.toLowerCase().includes('score') ||
+          k.toLowerCase().includes('skor')
+        );
+        const areaKey = keys.find(k =>
+          k.toLowerCase().includes('area') ||
+          k.toLowerCase().includes('bagian') ||
+          k.toLowerCase().includes('dept')
+        );
+        const leaderKey = keys.find(k =>
+          k.toLowerCase().includes('leader') ||
+          k.toLowerCase().includes('kepala') ||
+          k.toLowerCase().includes('foreman') ||
+          k.toLowerCase().includes('nama')
+        );
+
+        if (!scoreKey && !areaKey) return [];
+
+        // Group by area & ambil nilai terbaru
+        const areaMap = {};
+        prodData.forEach(row => {
+          const area   = String(row[areaKey] || row['area'] || row['bagian'] || 'Area ' + (Object.keys(areaMap).length + 1)).trim();
+          const leader = String(row[leaderKey] || row['leader'] || row['nama'] || '—').trim();
+          const curr   = parseFloat(row[scoreKey] || 0) || 0;
+          const prev   = parseFloat(row['prev_score'] || row['bulan_lalu'] || 0) || 0;
+          const target = parseFloat(row['target'] || row['target_2026'] || 80) || 80;
+          const photo  = `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(leader || area)}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+
+          if (!area || area === '—') return;
+          if (!areaMap[area] || curr > areaMap[area].curr) {
+            areaMap[area] = { area, leader, curr, prev, target, photo };
+          }
+        });
+
+        return Object.values(areaMap)
+          .filter(a => a.curr > 0 || a.area !== 'Area 1')
+          .sort((a, b) => b.curr - a.curr);
+      }
+
+      // ---- Render Leaderboard ----
+      function renderLeaderboard(list) {
+        const ul = document.getElementById('leaderList');
+        const periodEl = document.getElementById('periodLabel');
+
+        if (!list || list.length === 0) {
+          ul.innerHTML = '<li style="text-align:center; color:var(--text-muted); padding:24px;">Belum ada data Process Score</li>';
+          return;
+        }
+
+        periodEl.textContent = ''; // nanti dari sync_log
+
+        ul.innerHTML = list.map((item, idx) => {
+          const target = item.target || 80;
+          const curr   = item.curr || 0;
+          let scoreClass = 'score-zero';
+          if (curr > 0) {
+            if (curr > 90)            scoreClass = 'score-good';
+            else if (curr >= target)  scoreClass = 'score-ok';
+            else if (curr >= target - 10) scoreClass = 'score-warn';
+            else                      scoreClass = 'score-bad';
+          }
+
+          let trend = '<span class="trend-same">＝</span>';
+          if (curr > item.prev) trend = '<span class="trend-up">▲</span>';
+          else if (curr < item.prev) trend = '<span class="trend-down">▼</span>';
+
+          const rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx + 1);
+
+          return `
+            <li class="leader-row">
+              <div style="font-weight:900; text-align:center; font-size:13px;">${rankEmoji}</div>
+              <div style="overflow:hidden;">
+                <div style="font-weight:800; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.area}</div>
+                <div style="font-size:10px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.leader}</div>
+              </div>
+              <div></div>
+              <div style="text-align:center;">
+                <div class="score-badge" style="background:rgba(100,116,139,0.15); color:#94a3b8; border-color:transparent;">
+                  ${item.prev > 0 ? item.prev.toFixed(1) : '—'}
+                </div>
+              </div>
+              <div style="text-align:center;">
+                <div class="score-badge ${scoreClass}">${curr > 0 ? curr.toFixed(1) : '—'}</div>
+              </div>
+              <div style="text-align:center;">
+                <div class="score-badge score-good">${target}</div>
+              </div>
+              <div style="text-align:center;">${trend}</div>
+            </li>
+          `;
+        }).join('');
+
+        // Update avatars
+        const top1 = list[0];
+        const bad1 = list[list.length - 1];
+
+        if (top1) {
+          setAvatar('avatarTop', 'avatarTopPlaceholder', top1.photo, top1.leader, `${top1.area} (${top1.curr.toFixed(1)})`, 'avatarTopName', 'avatarTopSub');
+        }
+        if (bad1 && list.length > 1) {
+          setAvatar('avatarBad', 'avatarBadPlaceholder', bad1.photo, bad1.leader, `${bad1.area} (${bad1.curr.toFixed(1)})`, 'avatarBadName', 'avatarBadSub');
+        }
+      }
+
+      function setAvatar(imgId, placeholderId, src, name, sub, nameId, subId) {
+        const img = document.getElementById(imgId);
+        const ph  = document.getElementById(placeholderId);
+        document.getElementById(nameId).textContent = name || '—';
+        document.getElementById(subId).textContent  = sub  || '—';
+        if (src) {
+          img.src = src;
+          img.style.display = 'block';
+          ph.style.display = 'none';
+        } else {
+          img.style.display = 'none';
+          ph.style.display = 'flex';
+        }
+      }
+
+      // ---- Leaderboard 5R: Top Late / Top Overtime / Foreman + foto ----
+      // Sumber: sheet 'Leaderboard 5R' -> Supabase leaderboard_5r_ranking + leaderboard_5r_foreman
+      // IMG disimpan sebagai URL teks; kalau link di spreadsheet berubah, Supabase ikut berubah.
+      function normalizeImgUrl(url) {
+        if (!url) return null;
+        const u = String(url).trim();
+        if (!u) return null;
+        // Google Drive share link -> thumbnail langsung
+        // Format: drive.google.com/file/d/ID/view... atau open?id=ID atau uc?id=ID
+        let m = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)([a-zA-Z0-9_-]+)/)
+             || u.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+        if (m && m[1]) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w200`;
+        const m2 = u.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+        if (u.includes('drive.google') && m2 && m2[1]) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w200`;
+        return u;
+      }
+
+      // Alias produk display -> nilai PROD di sheet (sheet memakai KM/KP untuk keduanya)
+      const PROD_ALIAS = {
+        'KERUPUK MIE': ['KM/KP', 'KERUPUK MIE', 'KM', 'MIE'],
+        'KULIT PANGSIT': ['KM/KP', 'KULIT PANGSIT', 'KP'],
+        'MIE': ['MIE', 'KM/KP']
+      };
+
+      function matchForemanRow(foremen, product) {
+        if (!foremen || foremen.length === 0) return null;
+        const p = String(product || '').toUpperCase().trim();
+        // 1. exact match
+        let row = foremen.find(r => String(r.prod || '').toUpperCase().trim() === p);
+        if (row) return row;
+        // 2. alias
+        const aliases = PROD_ALIAS[p] || [p];
+        row = foremen.find(r => aliases.includes(String(r.prod || '').toUpperCase().trim()));
+        if (row) return row;
+        // 3. includes (mis. AYAM CINCANG vs AYAM)
+        row = foremen.find(r => {
+          const v = String(r.prod || '').toUpperCase().trim();
+          return v && (p.includes(v) || v.includes(p));
+        });
+        return row || null;
+      }
+
+      function renderLeader5R(ranking, foremen, selectedProduct) {
+        const lateEl = document.getElementById('topLateList');
+        const otEl   = document.getElementById('topOtList');
+        const strip = document.getElementById('foremanStrip');
+        const prodLabel = document.getElementById('foremanProdLabel');
+        if (!lateEl || !otEl || !strip) return;
+
+        prodLabel.textContent = selectedProduct || '—';
+
+        // --- Top Late & Top Overtime (kolom B-C sheet, max 5) ---
+        const sorted = [...(ranking || [])].sort((a, b) => (a.rank || 99) - (b.rank || 99));
+        const lates = sorted.map(r => r.top_late).filter(v => v && String(v).trim() !== '').slice(0, 5);
+        const ots   = sorted.map(r => r.top_overtime).filter(v => v && String(v).trim() !== '').slice(0, 5);
+
+        const medals = ['🥇','🥈','🥉','4','5'];
+        lateEl.innerHTML = lates.length === 0
+          ? '<li style="color:var(--text-muted); background:none;">— belum ada data —</li>'
+          : lates.map((n, i) => `<li><span class="top5-rank">${medals[i] || (i+1)}</span><span style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(String(n))}</span></li>`).join('');
+        otEl.innerHTML = ots.length === 0
+          ? '<li style="color:var(--text-muted); background:none;">— belum ada data —</li>'
+          : ots.map((n, i) => `<li><span class="top5-rank">${medals[i] || (i+1)}</span><span style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(String(n))}</span></li>`).join('');
+
+        // --- Foreman produk terpilih (kolom G-M sheet, foto by IMG URL) ---
+        const row = matchForemanRow(foremen, selectedProduct);
+        if (!row) {
+          strip.innerHTML = '<div style="font-size:10px; color:var(--text-muted);">— belum ada data foreman —</div>';
+          return;
+        }
+        const items = [
+          { name: row.foreman_1, img: normalizeImgUrl(row.img_1) },
+          { name: row.foreman_2, img: normalizeImgUrl(row.img_2) },
+          { name: row.foreman_3, img: normalizeImgUrl(row.img_3) }
+        ];
+        strip.innerHTML = items.map(it => {
+          const nm = (it.name && String(it.name).trim() !== '') ? String(it.name) : '—';
+          const initial = escapeHtml(nm.trim().charAt(0).toUpperCase() || '?');
+          const visual = it.img
+            ? `<img class="foreman-img" src="${escapeHtml(it.img)}" alt="${escapeHtml(nm)}" loading="lazy" onerror="this.outerHTML='<div class=&quot;foreman-ph&quot;>${initial}</div>'" />`
+            : `<div class="foreman-ph">${initial}</div>`;
+          return `<div class="foreman-item">${visual}<div class="foreman-name">${escapeHtml(nm)}</div></div>`;
+        }).join('');
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+
+      // ---- Set KPI value ----
+      function setKPI(elId, value, colorClass, small = false) {
+        const el = document.getElementById(elId);
+        if (!value || value === 'No Data') {
+          el.innerHTML = '—';
+          el.className = 'kpi-value muted';
+          el.style.color = '';
+          return;
+        }
+
+        // Parse number + unit
+        const match = String(value).match(/^([\d.,\s\/]+)\s*([^\d\s].*)$/);
+        if (match) {
+          const num  = match[1].trim();
+          const unit = match[2].trim();
+          el.innerHTML = `<span>${num}</span>${unit ? `<span class="kpi-unit">${unit}</span>` : ''}`;
+        } else {
+          el.textContent = value;
+        }
+
+        const productColor = PRODUCT_COLORS[PRODUCTS[productIdx]];
+        el.className = `kpi-value ${colorClass}`;
+
+        // Warnai KPI produk-spesifik dengan warna produk
+        if (['yieldVal','wasteVal','planVal','outputVal','productivityVal'].includes(elId) && productColor) {
+          el.style.color = productColor;
+        } else {
+          el.style.color = '';
+        }
+      }
+
+      // ---- Status sync indicator ----
+      function setSyncStatus(status) {
+        const dot  = document.getElementById('syncDot');
+        const text = document.getElementById('syncText');
+        if (status === 'loading') {
+          dot.style.background  = '#f59e0b';
+          dot.style.animation   = 'pulse-dot 0.6s ease-in-out infinite';
+          text.textContent = 'Memuat...';
+        } else if (status === 'ok') {
+          dot.style.background  = '#10b981';
+          dot.style.animation   = 'pulse-dot 1.2s ease-in-out infinite';
+          text.textContent = 'Live';
+        } else {
+          dot.style.background  = '#f43f5e';
+          dot.style.animation   = 'none';
+          text.textContent = 'Offline';
+        }
+      }
+
+      // ---- Realtime subscription ----
+      function subscribeRealtime() {
+        supabase
+          .channel('dashboard_changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'sync_log' }, () => {
+            loadDashboardData();
+          })
+          .subscribe();
+      }
+
+      // ---- TV Mode ----
+      window.toggleTvMode = function() {
+        tvActive = !tvActive;
+        const btn = document.getElementById('tvBtn');
+        const bar = document.getElementById('tvBar');
+
+        if (tvActive) {
+          btn.textContent = '⏹ Stop TV';
+          btn.style.background = '#dc2626';
+          btn.style.borderColor = '#dc2626';
+          btn.style.color = '#fff';
+          bar.style.display = 'flex';
+          // Build cycle combos
+          tvCombos = [];
+          PRODUCTS.forEach(p => SHIFTS.forEach(s => tvCombos.push({p, s})));
+          tvIndex = 0;
+          runTvCycle();
+        } else {
+          btn.textContent = '▶ Mode TV';
+          btn.style.background = '';
+          btn.style.borderColor = '';
+          btn.style.color = '';
+          bar.style.display = 'none';
+          clearTimeout(tvTimer);
+          clearInterval(tvCountTimer);
+        }
+      };
+
+      function runTvCycle() {
+        if (!tvActive) return;
+        const combo = tvCombos[tvIndex];
+        productIdx = PRODUCTS.indexOf(combo.p);
+        shiftIdx   = SHIFTS.indexOf(combo.s);
+        updatePills();
+        loadDashboardData();
+        updateTvBar();
+
+        const interval = parseInt(document.getElementById('tvInterval').value) || 8000;
+        tvCountdown = Math.floor(interval / 1000);
+        document.getElementById('tvBarCount').textContent = tvCountdown;
+
+        clearInterval(tvCountTimer);
+        tvCountTimer = setInterval(() => {
+          tvCountdown--;
+          if (tvCountdown < 0) tvCountdown = 0;
+          document.getElementById('tvBarCount').textContent = tvCountdown;
+        }, 1000);
+
+        clearTimeout(tvTimer);
+        tvTimer = setTimeout(() => {
+          tvIndex = (tvIndex + 1) % tvCombos.length;
+          runTvCycle();
+        }, interval);
+      }
+
+      function updateTvBar() {
+        const combo = tvCombos[tvIndex];
+        if (!combo) return;
+        document.getElementById('tvBarText').textContent = `▶ ${combo.p} | ${combo.s}`;
+      }
+
+      window.onTvIntervalChange = function() {
+        if (!tvActive) return;
+        clearTimeout(tvTimer);
+        clearInterval(tvCountTimer);
+        runTvCycle();
+      };
+    </script>
+
+  </body>
+</html>
