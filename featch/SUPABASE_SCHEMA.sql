@@ -137,3 +137,8 @@ BEGIN;
   ALTER PUBLICATION supabase_realtime ADD TABLE public.leaderboard_5r_ranking;
   ALTER PUBLICATION supabase_realtime ADD TABLE public.leaderboard_5r_foreman;
 COMMIT;
+
+-- ============================================================
+-- RPC featch_sync — definisi lengkap ada di SUPABASE_MIGRATION_002.sql
+-- (wajib dijalankan juga untuk install baru)
+-- ============================================================

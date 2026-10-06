@@ -139,12 +139,9 @@ function featchSource1() {
   });
 
   if (FEATCH_CONFIG.SUPABASE.ENABLED && records.length > 0) {
-    // Hapus data lama lalu insert baru
-    deleteSupabaseTable(cfg.supabaseTable);
-    const batchSize = 100;
-    for (let i = 0; i < records.length; i += batchSize) {
-      upsertSupabase(cfg.supabaseTable, records.slice(i, i + batchSize));
-    }
+    // RPC featch_sync: auto-tambah kolom TEXT yang belum ada, lalu replace isi tabel
+    // (butuh SUPABASE_MIGRATION_002.sql dijalankan sekali di Supabase)
+    rpcFeatchSync(cfg.supabaseTable, records);
   }
 
   // Simpan hash baru
@@ -230,11 +227,8 @@ function featchSource2() {
   });
 
   if (FEATCH_CONFIG.SUPABASE.ENABLED && records.length > 0) {
-    deleteSupabaseTable(cfg.supabaseTable);
-    const batchSize = 100;
-    for (let i = 0; i < records.length; i += batchSize) {
-      upsertSupabase(cfg.supabaseTable, records.slice(i, i + batchSize));
-    }
+    // RPC featch_sync: auto-tambah kolom TEXT yang belum ada, lalu replace isi tabel
+    rpcFeatchSync(cfg.supabaseTable, records);
   }
 
   PropertiesService.getScriptProperties().setProperty(FEATCH_CONFIG.CACHE_KEY_2, newHash);
@@ -375,14 +369,8 @@ function featchSource3() {
   }
 
   if (FEATCH_CONFIG.SUPABASE.ENABLED) {
-    if (ranking.length > 0) {
-      deleteSupabaseTable(cfg.supabaseTable_ranking);
-      upsertSupabase(cfg.supabaseTable_ranking, ranking);
-    }
-    if (foremen.length > 0) {
-      deleteSupabaseTable(cfg.supabaseTable_foreman);
-      upsertSupabase(cfg.supabaseTable_foreman, foremen);
-    }
+    if (ranking.length > 0) rpcFeatchSync(cfg.supabaseTable_ranking, ranking);
+    if (foremen.length > 0) rpcFeatchSync(cfg.supabaseTable_foreman, foremen);
   }
 
   PropertiesService.getScriptProperties().setProperty(FEATCH_CONFIG.CACHE_KEY_3, newHash);
@@ -424,8 +412,38 @@ function upsertSupabase(tableName, records) {
 }
 
 /**
+ * Sync via RPC featch_sync: otomatis menambah kolom TEXT yang belum ada,
+ * lalu me-replace seluruh isi tabel dalam 1 transaksi.
+ * Satu call untuk semua records. Butuh SUPABASE_MIGRATION_002.sql
+ * dijalankan sekali di Supabase Dashboard > SQL Editor.
+ */
+function rpcFeatchSync(tableName, records) {
+  if (!records || records.length === 0) return;
+  const url = FEATCH_CONFIG.SUPABASE.URL + '/rest/v1/rpc/featch_sync';
+  const options = {
+    method: 'post',
+    contentType: 'application/json',
+    headers: {
+      'apikey': FEATCH_CONFIG.SUPABASE.ANON_KEY,
+      'Authorization': 'Bearer ' + FEATCH_CONFIG.SUPABASE.ANON_KEY
+    },
+    payload: JSON.stringify({ p_table: tableName, p_rows: records }),
+    muteHttpExceptions: true
+  };
+
+  const res = UrlFetchApp.fetch(url, options);
+  const code = res.getResponseCode();
+  if (code >= 200 && code < 300) {
+    Logger.log('[SUPABASE] RPC featch_sync ' + tableName + ': ' + records.length + ' records OK — ' + res.getContentText().substring(0, 120));
+  } else {
+    Logger.log('[SUPABASE] ERROR RPC featch_sync ' + tableName + ': HTTP ' + code + ' — ' + res.getContentText().substring(0, 300));
+  }
+}
+
+/**
  * Hapus semua data di table Supabase sebelum insert ulang.
- * Menggunakan filter neq pada row_index >= 0 (semua baris).
+ * (Tidak dipakai lagi oleh source 1-3 yang sudah via RPC,
+ * disimpan untuk kompatibilitas.)
  */
 function deleteSupabaseTable(tableName) {
   const url = `${FEATCH_CONFIG.SUPABASE.URL}/rest/v1/${tableName}?row_index=gte.0`;
