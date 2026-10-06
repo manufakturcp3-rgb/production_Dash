@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Input Top 5 & Foreman</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#f6f4ec;color:#161616;font-family:'Poppins',Arial,sans-serif;font-size:14px;padding:16px;max-width:720px;margin:0 auto}
+h1{font-size:20px;font-weight:900;text-align:center;text-shadow:3px 3px 0 #d3f2fa;margin-bottom:4px}
+.sub{text-align:center;color:#555;font-size:12px;margin-bottom:16px}
+.card{background:#fff;border:3px solid #161616;border-radius:14px;box-shadow:6px 6px 0 #161616;padding:14px;margin-bottom:16px}
+.card h2{font-size:14px;font-weight:800;letter-spacing:.05em;margin-bottom:10px;text-transform:uppercase}
+.card h2 .tag{display:inline-block;background:#161616;color:#fff;font-size:10px;border-radius:6px;padding:1px 8px;margin-left:6px;vertical-align:middle}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.badge{background:#161616;color:#fff;font-weight:900;font-size:12px;border-radius:8px;min-width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+input[type=text]{flex:1;border:3px solid #161616;border-radius:10px;padding:8px 12px;font-family:inherit;font-weight:600;font-size:13px;outline:none;min-width:0}
+input[type=text]:focus{background:#d3f2fa}
+select{border:3px solid #161616;border-radius:10px;padding:8px 12px;font-family:inherit;font-weight:700;font-size:13px;background:#fff;width:100%;margin-bottom:10px}
+button{border:3px solid #161616;border-radius:10px;box-shadow:3px 3px 0 #161616;padding:9px 16px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;background:#00a9ce;color:#fff;width:100%}
+button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #161616}
+button.pink{background:#ec008d}
+button:disabled{opacity:.5;cursor:wait}
+.foto-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;background:#f6f4ec;border:2px solid #161616;border-radius:10px;padding:8px}
+.foto-row img{width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid #161616;flex-shrink:0;background:#ddd}
+.foto-row .grow{flex:1;min-width:0}
+.foto-row input[type=text]{width:100%;margin-bottom:6px}
+.foto-row input[type=file]{font-size:11px;width:100%}
+.up-status{font-size:11px;font-weight:700;min-height:16px}
+#status{position:sticky;bottom:12px;background:#161616;color:#fff;font-weight:700;font-size:13px;border-radius:12px;padding:10px 16px;text-align:center;display:none;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>INPUT TOP 5 & FOREMAN</h1>
+<div class="sub">Central Production 3 Majalengka — tersimpan ke sheet Leaderboard 5R & Google Drive</div>
+
+<div class="card">
+<h2>⏰ Top 5 Late <span class="tag">weekly</span></h2>
+<div id="lateInputs"></div>
+</div>
+
+<div class="card">
+<h2>🌙 Top 5 Normal Overtime <span class="tag">weekly</span></h2>
+<div id="otInputs"></div>
+<button id="btnTop5" onclick="saveTop5()">SIMPAN TOP 5</button>
+</div>
+
+<div class="card">
+<h2>👷 Foreman per Produk</h2>
+<select id="prodSelect" onchange="onProdChange()"></select>
+<div id="foremanRows"></div>
+<button class="pink" id="btnForeman" onclick="saveForeman()">SIMPAN NAMA FOREMAN</button>
+</div>
+
+<div id="status"></div>
+
+<script>
+var PRODUCTS=['UDANG KEJU','SIOMAY','PENTOL','ADONAN PANGSIT','AYAM CINCANG','LUMPIA','KM/KP','MIE','CABAI'];
+var LB={ranking:[],foremen:[]};
+function showStatus(msg,ok){var el=document.getElementById('status');el.style.display='block';el.style.background=ok===false?'#e11d48':'#161616';el.textContent=msg;if(ok!==false)setTimeout(function(){el.style.display='none';},3000);}
+function esc(s){return String(s===null||s===undefined?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+window.addEventListener('DOMContentLoaded',function(){
+var lh='',oh='';
+for(var i=0;i<5;i++){lh+='<div class="row"><div class="badge">'+(i+1)+'</div><input type="text" id="late'+i+'" placeholder="Nama peringkat '+(i+1)+'"></div>';oh+='<div class="row"><div class="badge">'+(i+1)+'</div><input type="text" id="ot'+i+'" placeholder="Nama peringkat '+(i+1)+'"></div>';}
+document.getElementById('lateInputs').innerHTML=lh;
+document.getElementById('otInputs').innerHTML=oh;
+var sel=document.getElementById('prodSelect');
+sel.innerHTML=PRODUCTS.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
+loadData();
+});
+function loadData(){
+showStatus('Memuat data sheet...');
+google.script.run.withSuccessHandler(function(lb){
+LB=lb||{ranking:[],foremen:[]};
+var sorted=(LB.ranking||[]).slice().sort(function(a,b){return (a.rank||99)-(b.rank||99);});
+var lates=[],ots=[],i;
+for(i=0;i<sorted.length&&lates.length<5;i++){if(sorted[i].top_late)lates.push(sorted[i].top_late);}
+for(i=0;i<sorted.length&&ots.length<5;i++){if(sorted[i].top_overtime)ots.push(sorted[i].top_overtime);}
+for(i=0;i<5;i++){document.getElementById('late'+i).value=lates[i]||'';document.getElementById('ot'+i).value=ots[i]||'';}
+onProdChange();
+document.getElementById('status').style.display='none';
+}).withFailureHandler(function(e){showStatus('Gagal memuat: '+e.message,false);}).getLeaderboard();
+}
+function foremanOf(prod){
+for(var i=0;i<(LB.foremen||[]).length;i++){if(String(LB.foremen[i].prod||'').toUpperCase()===prod)return LB.foremen[i];}
+return null;
+}
+function onProdChange(){
+var prod=document.getElementById('prodSelect').value;
+var row=foremanOf(prod)||{};
+var html='';
+for(var s=1;s<=3;s++){
+var nm=row['foreman_'+s]||'';
+var img=row['img_'+s]||'';
+html+='<div class="foto-row">'
++'<img id="prev'+s+'" src="'+esc(img)+'" onerror="this.src=\'\'" style="'+(img?'':'display:none')+'">'
++'<div class="grow"><input type="text" id="fname'+s+'" placeholder="Nama foreman '+s+'" value="'+esc(nm)+'">'
++'<input type="file" id="ffile'+s+'" accept="image/*" onchange="uploadSlot('+s+')">'
++'<div class="up-status" id="ustat'+s+'">'+(img?'Foto sudah ada':'Belum ada foto')+'</div></div></div>';
+}
+document.getElementById('foremanRows').innerHTML=html;
+}
+function saveTop5(){
+var late=[],ot=[],i;
+for(i=0;i<5;i++){late.push(document.getElementById('late'+i).value.trim());ot.push(document.getElementById('ot'+i).value.trim());}
+var btn=document.getElementById('btnTop5');btn.disabled=true;showStatus('Menyimpan Top 5...');
+google.script.run.withSuccessHandler(function(){btn.disabled=false;showStatus('Top 5 tersimpan.');loadData();}).withFailureHandler(function(e){btn.disabled=false;showStatus('Gagal: '+e.message,false);}).saveTop5({late:late,overtime:ot});
+}
+function saveForeman(){
+var prod=document.getElementById('prodSelect').value;
+var data={late:[],overtime:[],foremen:{}};
+data.foremen[prod]={f1:document.getElementById('fname1').value.trim(),f2:document.getElementById('fname2').value.trim(),f3:document.getElementById('fname3').value.trim()};
+var btn=document.getElementById('btnForeman');btn.disabled=true;showStatus('Menyimpan nama foreman...');
+google.script.run.withSuccessHandler(function(){btn.disabled=false;showStatus('Nama foreman tersimpan.');loadData();}).withFailureHandler(function(e){btn.disabled=false;showStatus('Gagal: '+e.message,false);}).saveTop5(data);
+}
+function uploadSlot(s){
+var prod=document.getElementById('prodSelect').value;
+var file=document.getElementById('ffile'+s).files[0];
+if(!file)return;
+var stat=document.getElementById('ustat'+s);
+if(file.size>8*1024*1024){stat.textContent='File > 8MB, pilih yang lebih kecil.';return;}
+stat.textContent='Mengecilkan & mengupload...';
+var img=new Image();
+img.onload=function(){
+var max=800, w=img.width, h=img.height;
+if(w>max||h>max){var r=Math.min(max/w,max/h);w=Math.round(w*r);h=Math.round(h*r);}
+var cv=document.createElement('canvas');cv.width=w;cv.height=h;
+cv.getContext('2d').drawImage(img,0,0,w,h);
+var dataUrl=cv.toDataURL('image/jpeg',0.85);
+URL.revokeObjectURL(img.src);
+google.script.run.withSuccessHandler(function(res){
+stat.textContent='Terupload.';
+var pv=document.getElementById('prev'+s);pv.src=res.url;pv.style.display='block';
+loadData();
+}).withFailureHandler(function(e){stat.textContent='Gagal: '+e.message;}).uploadPhoto(prod,s,dataUrl,file.name);
+};
+img.onerror=function(){stat.textContent='File bukan gambar.';};
+img.src=URL.createObjectURL(file);
+}
+</script>
+</body>
+</html>

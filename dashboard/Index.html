@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Central Production 3 Majalengka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#f6f4ec;--card:#fff;--ink:#161616;--c1:#00a9ce;--c2:#ec008d;
+--c1-soft:#d3f2fa;--c2-soft:#ffd9ec;--gold:#b45309;--success:#059669;--danger:#e11d48;
+--text-primary:#161616;--text-secondary:#3f3f46;--text-muted:#9a9aa3;
+--radius-xl:18px;--radius-pill:100px;
+--shadow:6px 6px 0 var(--ink);--shadow-sm:3px 3px 0 var(--ink);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text-primary);font-family:'Poppins','Segoe UI',Arial,sans-serif;font-size:14px;line-height:1.5}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(rgba(22,22,22,.10) 1.5px,transparent 1.5px);background-size:22px 22px;z-index:0;pointer-events:none}
+.float-deco{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.float-deco span{position:absolute;display:inline-block;opacity:.55;filter:saturate(1.4);animation:floaty ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-22px) rotate(8deg)}}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+.live-dot{animation:pulse-dot 1.2s ease-in-out infinite}
+.app-wrapper{height:100dvh;display:flex;flex-direction:column;gap:8px;padding:8px 10px;position:relative;z-index:1}
+.glass{background:var(--card);border:3px solid var(--ink);border-radius:var(--radius-xl);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.main-header{border-radius:var(--radius-xl);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--card);flex-shrink:0;min-height:58px}
+.main-header h1{font-size:clamp(16px,2.8vh,28px);font-weight:900;text-align:center;flex:1;color:var(--ink);letter-spacing:.04em;line-height:1.2;text-shadow:3px 3px 0 var(--c1-soft)}
+.header-logos{display:flex;gap:8px;align-items:center}
+.header-logo{height:clamp(36px,5vh,52px);width:auto;object-fit:contain}
+.header-right{display:flex;align-items:center}
+.toast{display:flex;align-items:center;gap:8px;background:var(--card);border:3px solid var(--ink);border-radius:var(--radius-pill);box-shadow:var(--shadow-sm);padding:6px 14px 6px 10px;font-size:12px;font-weight:700;color:var(--text-secondary)}
+.toast-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--ink);flex-shrink:0}
+.dash-grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(180px,22%) 1fr;gap:8px;overflow:hidden}
+.rail-col{display:flex;flex-direction:column;gap:8px;min-height:0;overflow:hidden}
+.pill{background:var(--card);border:3px solid var(--ink);border-radius:var(--radius-pill);box-shadow:var(--shadow-sm);padding:12px 20px;font-weight:700;font-size:clamp(12px,1.8vh,16px);color:var(--text-primary);text-align:center;letter-spacing:.04em;cursor:pointer;transition:all .15s ease;user-select:none}
+.pill:hover,.pill:active{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink);background:var(--c1-soft)}
+.pill-cap{font-size:10px;opacity:.5;margin-bottom:2px;font-weight:700;letter-spacing:.06em}
+.foreman-card{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;padding:12px 10px;gap:4px;overflow:hidden}
+.foreman-prod{font-size:11px;font-weight:800;letter-spacing:.05em;color:#0284a8}
+.foreman-list{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;gap:8px;overflow:hidden}
+.foreman-item{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.foreman-img{width:clamp(56px,9vh,84px);height:clamp(56px,9vh,84px);border-radius:50%;object-fit:cover;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--c1);background:var(--c1-soft)}
+.foreman-item:nth-child(even) .foreman-img{box-shadow:4px 4px 0 var(--c2)}
+.foreman-ph{width:clamp(56px,9vh,84px);height:clamp(56px,9vh,84px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;background:var(--c1-soft);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--c1);color:var(--ink)}
+.foreman-name{font-size:11px;font-weight:700;text-align:center;line-height:1.25;color:var(--text-primary);word-break:break-word;max-width:100%}
+.boxes-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:8px;min-height:0;overflow:hidden}
+.box{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12px 10px;gap:6px;min-height:0;overflow:hidden;background:#fff}
+.box:nth-child(even){background:var(--c1-soft)}
+.box:nth-child(3n){background:var(--c2-soft)}
+.box-label{font-size:clamp(10px,1.6vh,13px);font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);line-height:1.35}
+.box-label span{font-weight:600;font-style:italic;font-size:.85em;color:var(--text-muted)}
+.box-value{font-size:clamp(18px,4vh,40px);font-weight:900;line-height:1.1;letter-spacing:-.02em;display:flex;align-items:baseline;justify-content:center;gap:6px;flex-wrap:wrap}
+.box-value.teal{color:#0284a8}.box-value.magenta{color:#be185d}.box-value.gold{color:var(--gold)}.box-value.danger{color:var(--danger)}.box-value.success{color:#047857}.box-value.muted{color:var(--text-muted);font-size:clamp(14px,2.5vh,22px)}
+.kpi-unit{font-size:.45em;font-weight:700;opacity:.8;letter-spacing:.05em}
+.box-top5{list-style:none;display:flex;flex-direction:column;gap:4px;width:100%;margin:0;padding:0;overflow:hidden}
+.box-top5 li{display:flex;align-items:center;gap:8px;font-size:clamp(10px,1.7vh,13px);font-weight:700;background:#fff;border:2px solid var(--ink);border-radius:9px;box-shadow:2px 2px 0 var(--ink);padding:4px 10px;white-space:nowrap;overflow:hidden;text-align:left;color:var(--ink)}
+.box-top5 li span:last-child{overflow:hidden;text-overflow:ellipsis}
+.top5-rank{font-weight:900;color:#fff;background:var(--ink);border-radius:6px;min-width:22px;text-align:center;flex-shrink:0;padding:0 3px}
+.footer-bar{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:4px;font-size:11px}
+.tv-bar{background:var(--ink);border:3px solid var(--ink);border-radius:var(--radius-pill);box-shadow:var(--shadow-sm);padding:5px 14px;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
+.filter-select{background:transparent;border:none;color:var(--text-primary);font-family:inherit;font-weight:800;font-size:12px;text-align:center;cursor:pointer;outline:none;padding:8px}
+.filter-select option{background:#fff;color:#161616}
+@media (max-width:900px){.dash-grid{grid-template-columns:1fr;grid-template-rows:auto 1fr;overflow-y:auto}html,body{overflow:auto}.boxes-grid{grid-template-columns:1fr 1fr;grid-template-rows:none}.foreman-card{min-height:220px}}
+</style>
+</head>
+<body>
+<div class="float-deco" aria-hidden="true">
+<span style="top:12%;left:3%;font-size:34px;animation-duration:7s">🏭</span>
+<span style="top:8%;left:28%;font-size:26px;animation-duration:9s;animation-delay:-2s">⚙️</span>
+<span style="top:14%;right:6%;font-size:30px;animation-duration:8s;animation-delay:-4s">📦</span>
+<span style="top:38%;left:1%;font-size:24px;animation-duration:10s;animation-delay:-1s">⭐</span>
+<span style="top:44%;right:2%;font-size:28px;animation-duration:7.5s;animation-delay:-3s">🔧</span>
+<span style="bottom:24%;left:5%;font-size:26px;animation-duration:9.5s;animation-delay:-5s">📊</span>
+<span style="bottom:18%;right:4%;font-size:32px;animation-duration:8.5s;animation-delay:-2.5s">🏆</span>
+<span style="bottom:8%;left:35%;font-size:24px;animation-duration:11s;animation-delay:-6s">✅</span>
+<span style="top:60%;left:44%;font-size:22px;animation-duration:9s;animation-delay:-3.5s">💡</span>
+<span style="top:22%;right:30%;font-size:22px;animation-duration:10.5s;animation-delay:-1.5s">🚀</span>
+</div>
+<div id="app" class="app-wrapper">
+<header class="glass main-header">
+<div class="header-logos">
+<img src="https://bkk.smk-unsur.sch.id/assets/logo_perusahaan/25d7a6441a1880fddfb6a915546feb0a.png" alt="Logo" class="header-logo" onerror="this.style.display='none'">
+</div>
+<h1>CENTRAL PRODUCTION 3 MAJALENGKA</h1>
+<div class="header-right">
+<div class="toast"><div class="toast-dot live-dot" id="syncDot" style="background:#64748b"></div><span id="syncText">Menghubungkan...</span></div>
+</div>
+</header>
+<main class="dash-grid">
+<aside class="rail-col">
+<div class="glass pill" onclick="cycleProduct()" title="Klik untuk ganti produk">
+<div class="pill-cap">PRODUK</div>
+<div id="productLabel">—</div>
+</div>
+<div class="glass pill" onclick="cycleShift()" title="Klik untuk ganti shift">
+<div class="pill-cap">SHIFT</div>
+<div id="shiftLabel">—</div>
+</div>
+<div class="glass pill" style="cursor:default">
+<div class="pill-cap">TANGGAL PRODUKSI</div>
+<div id="dateDateLabel" style="font-weight:800">—</div>
+</div>
+<div class="glass foreman-card">
+<div class="box-label">FOREMAN PRODUKSI</div>
+<div class="foreman-prod" id="foremanProdLabel">—</div>
+<div id="foremanBox" class="foreman-list"><div style="font-size:11px;color:var(--text-muted)">Memuat...</div></div>
+</div>
+</aside>
+<section class="boxes-grid">
+<div class="glass box"><div class="box-label">STANDARD / OUTPUT <span>shiftly</span></div><div class="box-value success" id="boxOutput">—</div></div>
+<div class="glass box"><div class="box-label">PROCESS SCORE <span>monthly</span></div><div class="box-value teal" id="boxProcess">—</div></div>
+<div class="glass box"><div class="box-label">PRODUCT SCORE <span>monthly</span></div><div class="box-value gold" id="boxProductScore">—</div></div>
+<div class="glass box"><div class="box-label">YIELD <span>shiftly</span></div><div class="box-value teal" id="boxYield">—</div></div>
+<div class="glass box"><div class="box-label">GMP <span>monthly</span></div><div class="box-value teal" id="boxGmp">—</div></div>
+<div class="glass box"><div class="box-label">5R <span>monthly</span></div><div class="box-value teal" id="boxSr">—</div></div>
+<div class="glass box"><div class="box-label">WASTE <span>shiftly</span></div><div class="box-value danger" id="boxWaste">—</div></div>
+<div class="glass box"><div class="box-label">TOP 5 LATE <span>weekly</span></div><ol id="boxLate" class="box-top5"><li>Memuat...</li></ol></div>
+<div class="glass box"><div class="box-label">TOP 5 NORMAL OVERTIME <span>weekly</span></div><ol id="boxOt" class="box-top5"><li>Memuat...</li></ol></div>
+</section>
+</main>
+<footer class="footer-bar">
+<div id="tvBar" class="tv-bar" style="display:none">
+<div class="toast-dot live-dot" style="background:red;flex-shrink:0"></div>
+<span id="tvBarText">Mode TV</span>
+<span id="tvBarCount" style="font-weight:900">0</span>s
+</div>
+<div style="flex:1"></div>
+<div style="font-size:11px;color:var(--text-muted);font-weight:600">Update terakhir: <span id="lastUpdateTime" style="color:var(--text-secondary)">—</span></div>
+<div class="glass" style="padding:6px 12px;border-radius:14px;display:flex;align-items:center;gap:8px">
+<select id="tvInterval" class="filter-select" onchange="onTvIntervalChange()">
+<option value="5000">5 dtk</option>
+<option value="8000" selected>8 dtk</option>
+<option value="15000">15 dtk</option>
+<option value="30000">30 dtk</option>
+</select>
+<button id="tvBtn" onclick="toggleTvMode()" style="background:#fff;border:3px solid var(--ink);border-radius:10px;box-shadow:3px 3px 0 var(--ink);padding:5px 12px;color:var(--text-primary);font-family:inherit;font-weight:700;font-size:11px;cursor:pointer;letter-spacing:.04em">▶ Mode TV</button>
+</div>
+</footer>
+</div>
+<script>
+var PRODUCTS=['SIOMAY','UDANG KEJU','PENTOL','ADONAN PANGSIT','AYAM CINCANG','LUMPIA','KERUPUK MIE','KULIT PANGSIT','MIE','CABAI'];
+var SHIFTS=['Shift 1','Shift 2','Shift 3','ALL SHIFT'];
+var productIdx=0,shiftIdx=1;
+var PRODUCT_COLORS={'SIOMAY':'#00b3d8','UDANG KEJU':'#ec008d','PENTOL':'#10b981','ADONAN PANGSIT':'#a78bfa','AYAM CINCANG':'#f97316','LUMPIA':'#ec4899','KERUPUK MIE':'#f59e0b','KULIT PANGSIT':'#14b8a6','MIE':'#6366f1','CABAI':'#22c55e'};
+var tvActive=false,tvTimer=null,tvCountdown=0,tvCountTimer=null;
+var tvCombos=[],tvIndex=0;
+var loading=false;
+window.addEventListener('DOMContentLoaded',function(){updatePills();loadData();setInterval(loadData,3*60*1000);});
+function updatePills(){
+document.getElementById('productLabel').textContent=PRODUCTS[productIdx];
+document.getElementById('shiftLabel').textContent=SHIFTS[shiftIdx];
+document.getElementById('productLabel').style.color=PRODUCT_COLORS[PRODUCTS[productIdx]]||'#00b3d8';
+}
+function cycleProduct(){if(tvActive)return;productIdx=(productIdx+1)%PRODUCTS.length;updatePills();loadData();}
+function cycleShift(){if(tvActive)return;shiftIdx=(shiftIdx+1)%SHIFTS.length;updatePills();loadData();}
+function loadData(){
+if(loading)return;loading=true;setSyncStatus('loading');
+var attempt=0;
+function once(){
+attempt++;
+google.script.run.withSuccessHandler(function(json){
+loading=false;
+if(!json||json.ok===false){onFail((json&&json.error)||'backend error');return;}
+var lb=json.leaderboard||{};
+renderDashboard(json.dashboard||[],lb.ranking||[],lb.foremen||[],{timestamp:json.timestamp});
+setSyncStatus('ok');
+}).withFailureHandler(function(err){
+if(attempt<3){setTimeout(once,2000);}else{loading=false;onFail(err);}
+}).getData();
+}
+once();
+}
+function onFail(msg){console.error('[DASHBOARD] Error:',msg);setSyncStatus('error');}
+function renderDashboard(dashData,rank5r,foreman5r,syncData){
+var selectedProduct=PRODUCTS[productIdx];
+var selectedShift=SHIFTS[shiftIdx];
+var kpis=extractKPIs(dashData,selectedProduct,selectedShift);
+setBox('boxOutput',kpis.outputVsStd,'success');
+setBox('boxProcess',kpis.processScore,'teal');
+setBox('boxProductScore',kpis.productScore,'gold');
+setBox('boxYield',kpis.yield,'teal');
+setBox('boxGmp',kpis.gmp,'teal');
+setBox('boxSr',kpis.sr,'teal');
+setBox('boxWaste',kpis.waste,'danger');
+document.getElementById('dateDateLabel').textContent=kpis.dateLabel||'—';
+renderTop5(rank5r);
+renderForeman(foreman5r,selectedProduct);
+if(syncData&&syncData.timestamp){
+var d=new Date(syncData.timestamp);
+document.getElementById('lastUpdateTime').textContent=d.toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+}
+function extractKPIs(rows,selectedProduct,selectedShift){
+var kpis={output:null,stdPlan:null,yield:null,waste:null,gmp:null,processScore:null,productScore:null,sr:null,outputVsStd:null,dateLabel:null};
+if(!rows||rows.length===0)return formatKPIs(kpis);
+var latestRow=null;
+for(var i=rows.length-1;i>=0;i--){if(rows[i].tanggal){latestRow=rows[i];break;}}
+latestRow=latestRow||rows[rows.length-1];
+if(latestRow&&latestRow.tanggal){kpis.dateLabel=String(latestRow.tanggal).substring(0,10);}
+var prodKey=selectedProduct.toLowerCase().replace(/[^a-z0-9]/g,'_');
+var shiftKey=selectedShift.toLowerCase().replace(/[^a-z0-9]/g,'_');
+var isAllShift=(selectedShift==='ALL SHIFT');
+var allKeys=Object.keys(latestRow);
+function numVal(v){var n=parseFloat(String(v===null||v===undefined?'':v).replace(/[^0-9.-]/g,''));return isNaN(n)?null:n;}
+function prodMatch(k){if(k.indexOf(prodKey)!==-1)return true;var ps=prodKey.split('_');for(var i=0;i<ps.length;i++){if(ps[i].length>2&&k.indexOf(ps[i])!==-1)return true;}return false;}
+function findShiftly(t){for(var i=0;i<allKeys.length;i++){var k=allKeys[i].toLowerCase();if(prodMatch(k)&&(isAllShift||k.indexOf(shiftKey)!==-1)&&k.indexOf(t)!==-1){var v=numVal(latestRow[allKeys[i]]);if(v!==null)return v;}}return null;}
+function findMonthly(tests){var preds=Array.isArray(tests)?tests:[tests];var i,k,j,v;
+for(i=0;i<allKeys.length;i++){k=allKeys[i].toLowerCase();if(prodMatch(k)){for(j=0;j<preds.length;j++){if(preds[j](k)){v=numVal(latestRow[allKeys[i]]);if(v!==null)return v;}}}}
+for(i=0;i<allKeys.length;i++){k=allKeys[i].toLowerCase();for(j=0;j<preds.length;j++){if(preds[j](k)){v=numVal(latestRow[allKeys[i]]);if(v!==null)return v;}}}
+return null;}
+kpis.output=findShiftly('actual')||findShiftly('output')||findShiftly('fg');
+kpis.stdPlan=findShiftly('std')||findShiftly('ppic')||findShiftly('standard');
+kpis.yield=findShiftly('yield');
+kpis.waste=findShiftly('waste')||findShiftly('reject');
+kpis.gmp=findMonthly(function(k){return k.indexOf('gmp')!==-1;});
+kpis.sr=findMonthly([function(k){return k.indexOf('5r')!==-1;},function(k){return /(^|_)sr($|_)/.test(k);}]);
+kpis.processScore=findMonthly([function(k){return k.indexOf('process')!==-1;},function(k){return k.indexOf('proses')!==-1;}]);
+kpis.productScore=findMonthly([function(k){return k.indexOf('product_score')!==-1||k.indexOf('productscore')!==-1;},function(k){return k.indexOf('product')!==-1&&k.indexOf('score')!==-1&&k.indexOf('productiv')===-1;}]);
+return formatKPIs(kpis);
+}
+function formatKPIs(kpis){
+function fmt(v,suffix){if(v===null||v===undefined||isNaN(v))return null;return Math.round(v).toLocaleString('id-ID')+(suffix?' '+suffix:'');}
+function fmtPct(v){if(v===null||v===undefined||isNaN(v))return null;var pct=v<=1?v*100:v;return pct.toFixed(1)+'%';}
+function fmtScore(v){if(v===null||v===undefined||isNaN(v))return null;return (Math.round(v*10)/10).toLocaleString('id-ID',{maximumFractionDigits:1});}
+return{
+yield:fmtPct(kpis.yield),
+waste:fmt(kpis.waste,'Kg'),
+gmp:fmtScore(kpis.gmp),
+processScore:fmtScore(kpis.processScore),
+productScore:fmtScore(kpis.productScore),
+sr:fmtScore(kpis.sr),
+outputVsStd:(kpis.output!==null&&kpis.stdPlan!==null)?(fmt(kpis.output)+' / '+fmt(kpis.stdPlan)):fmt(kpis.output,'Pack'),
+dateLabel:kpis.dateLabel};
+}
+function renderTop5(ranking){
+var lateEl=document.getElementById('boxLate');
+var otEl=document.getElementById('boxOt');
+var sorted=(ranking||[]).slice().sort(function(a,b){return (a.rank||99)-(b.rank||99);});
+var lates=[],ots=[],i;
+for(i=0;i<sorted.length&&lates.length<5;i++){if(sorted[i].top_late&&String(sorted[i].top_late).trim()!=='')lates.push(sorted[i].top_late);}
+for(i=0;i<sorted.length&&ots.length<5;i++){if(sorted[i].top_overtime&&String(sorted[i].top_overtime).trim()!=='')ots.push(sorted[i].top_overtime);}
+var medals=['🥇','🥈','🥉','4','5'];
+lateEl.innerHTML=lates.length===0?'<li style="color:var(--text-muted);background:none;border:none;box-shadow:none;justify-content:center">— belum ada data —</li>':lates.map(function(n,i){return '<li><span class="top5-rank">'+(medals[i]||(i+1))+'</span><span>'+escapeHtml(String(n))+'</span></li>';}).join('');
+otEl.innerHTML=ots.length===0?'<li style="color:var(--text-muted);background:none;border:none;box-shadow:none;justify-content:center">— belum ada data —</li>':ots.map(function(n,i){return '<li><span class="top5-rank">'+(medals[i]||(i+1))+'</span><span>'+escapeHtml(String(n))+'</span></li>';}).join('');
+}
+var PROD_ALIAS={'KERUPUK MIE':['KM/KP','KERUPUK MIE','KM','MIE'],'KULIT PANGSIT':['KM/KP','KULIT PANGSIT','KP'],'MIE':['MIE','KM/KP']};
+function normalizeImgUrl(url){
+if(!url)return null;
+var u=String(url).trim();
+if(!u)return null;
+var m=u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)([a-zA-Z0-9_-]+)/)||u.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+if(m&&m[1])return 'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w400';
+var m2=u.match(/\/d\/([a-zA-Z0-9_-]{10,})/);
+if(u.indexOf('drive.google')!==-1&&m2&&m2[1])return 'https://drive.google.com/thumbnail?id='+m2[1]+'&sz=w400';
+return u;
+}
+function matchForemanRow(foremen,product){
+if(!foremen||foremen.length===0)return null;
+var p=String(product||'').toUpperCase().trim();
+var i,row;
+for(i=0;i<foremen.length;i++){if(String(foremen[i].prod||'').toUpperCase().trim()===p)return foremen[i];}
+var aliases=PROD_ALIAS[p]||[p];
+for(i=0;i<foremen.length;i++){if(aliases.indexOf(String(foremen[i].prod||'').toUpperCase().trim())!==-1)return foremen[i];}
+for(i=0;i<foremen.length;i++){var v=String(foremen[i].prod||'').toUpperCase().trim();if(v&&(p.indexOf(v)!==-1||v.indexOf(p)!==-1))return foremen[i];}
+return null;
+}
+function renderForeman(foremen,selectedProduct){
+var box=document.getElementById('foremanBox');
+var prodLabel=document.getElementById('foremanProdLabel');
+if(!box)return;
+prodLabel.textContent=selectedProduct||'—';
+var row=matchForemanRow(foremen,selectedProduct);
+if(!row){box.innerHTML='<div style="font-size:11px;color:var(--text-muted)">— belum ada data —</div>';return;}
+var items=[
+{name:row.foreman_1,img:normalizeImgUrl(row.img_1)},
+{name:row.foreman_2,img:normalizeImgUrl(row.img_2)},
+{name:row.foreman_3,img:normalizeImgUrl(row.img_3)}
+].filter(function(it){return (it.name&&String(it.name).trim()!=='')||it.img;});
+if(items.length===0){box.innerHTML='<div style="font-size:11px;color:var(--text-muted)">— belum ada data —</div>';return;}
+box.innerHTML=items.map(function(it){
+var nm=(it.name&&String(it.name).trim()!=='')?String(it.name).trim():'—';
+var initial=escapeHtml(nm.charAt(0).toUpperCase()||'?');
+var visual=it.img?'<img class="foreman-img" src="'+escapeHtml(it.img)+'" alt="'+escapeHtml(nm)+'" loading="lazy" onerror="this.style.display=\'none\'">':'<div class="foreman-ph">'+initial+'</div>';
+return '<div class="foreman-item">'+visual+'<div class="foreman-name">'+escapeHtml(nm)+'</div>';
+}).join('');
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function setBox(elId,value,colorClass){
+var el=document.getElementById(elId);
+if(!value){el.innerHTML='—';el.className='box-value muted';el.style.color='';return;}
+var match=String(value).match(/^([\d.,\s\/]+)\s*([^\d\s].*)$/);
+if(match){var num=match[1].trim();var unit=match[2].trim();el.innerHTML='<span>'+num+'</span>'+(unit?'<span class="kpi-unit">'+unit+'</span>':'');}
+else{el.textContent=value;}
+el.className='box-value '+colorClass;
+el.style.color='';
+}
+function setSyncStatus(status){
+var dot=document.getElementById('syncDot');
+var text=document.getElementById('syncText');
+if(status==='loading'){dot.style.background='#f59e0b';text.textContent='Memuat...';}
+else if(status==='ok'){dot.style.background='#10b981';text.textContent='Live';}
+else{dot.style.background='#f43f5e';text.textContent='Offline';}
+}
+function toggleTvMode(){
+tvActive=!tvActive;
+var btn=document.getElementById('tvBtn');
+var bar=document.getElementById('tvBar');
+if(tvActive){
+btn.textContent='⏹ Stop TV';btn.style.background='#dc2626';btn.style.borderColor='#161616';btn.style.color='#fff';
+bar.style.display='flex';
+tvCombos=[];PRODUCTS.forEach(function(p){SHIFTS.forEach(function(s){tvCombos.push({p:p,s:s});});});
+tvIndex=0;runTvCycle();
+}else{
+btn.textContent='▶ Mode TV';btn.style.background='';btn.style.borderColor='';btn.style.color='';
+bar.style.display='none';clearTimeout(tvTimer);clearInterval(tvCountTimer);
+}
+}
+function runTvCycle(){
+if(!tvActive)return;
+var combo=tvCombos[tvIndex];
+productIdx=PRODUCTS.indexOf(combo.p);
+shiftIdx=SHIFTS.indexOf(combo.s);
+updatePills();loadData();updateTvBar();
+var interval=parseInt(document.getElementById('tvInterval').value)||8000;
+tvCountdown=Math.floor(interval/1000);
+document.getElementById('tvBarCount').textContent=tvCountdown;
+clearInterval(tvCountTimer);
+tvCountTimer=setInterval(function(){tvCountdown--;if(tvCountdown<0)tvCountdown=0;document.getElementById('tvBarCount').textContent=tvCountdown;},1000);
+clearTimeout(tvTimer);
+tvTimer=setTimeout(function(){tvIndex=(tvIndex+1)%tvCombos.length;runTvCycle();},interval);
+}
+function updateTvBar(){var combo=tvCombos[tvIndex];if(!combo)return;document.getElementById('tvBarText').textContent='▶ '+combo.p+' | '+combo.s;}
+function onTvIntervalChange(){if(!tvActive)return;clearTimeout(tvTimer);clearInterval(tvCountTimer);runTvCycle();}
+</script>
+</body>
+</html>
