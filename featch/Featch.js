@@ -257,7 +257,15 @@ function featchSource3() {
   Logger.log('[FEATCH] Membaca Source 3: ' + cfg.name);
 
   const ss = SpreadsheetApp.openById(cfg.spreadsheetId);
-  const sheet = ss.getSheetByName(cfg.sheetName);
+  // Cari sheet toleran kapitalisasi/spasi (mis. "leaderboard 5r" tetap ketemu)
+  let sheet = ss.getSheetByName(cfg.sheetName);
+  if (!sheet) {
+    const want = String(cfg.sheetName || '').toLowerCase().trim();
+    const all = ss.getSheets();
+    for (let i = 0; i < all.length; i++) {
+      if (String(all[i].getName() || '').toLowerCase().trim() === want) { sheet = all[i]; break; }
+    }
+  }
   if (!sheet) throw new Error('Sheet tidak ditemukan: ' + cfg.sheetName);
 
   const lastRow = sheet.getLastRow();
