@@ -365,14 +365,17 @@ var vals=(values||[]).map(function(v){return (v===null||v===undefined||isNaN(Num
 var hasAny=vals.some(function(v){return v!==null;});
 svg.setAttribute('viewBox','0 0 '+W+' '+H);
 if(!labels||!labels.length||!hasAny){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" font-size="14" font-weight="700" fill="#9a9aa3">belum ada data</text>';return;}
-var maxV=10;
+var maxV=10,minV=0;
 vals.forEach(function(v){if(v!==null&&v>maxV)maxV=Math.ceil(v);});
+var vmin=null;
+vals.forEach(function(v){if(v!==null&&(vmin===null||v<vmin))vmin=v;});
+if(vmin!==null&&vmin-maxV<-2)minV=Math.max(0,Math.floor(vmin-3));
 var n=labels.length;
 function X(i){return pl+(W-pl-pr)*(n===1?0.5:i/(n-1));}
-function Y(v){return pt+(H-pt-pb)*(1-v/maxV);}
+function Y(v){return pt+(H-pt-pb)*(maxV===minV?0.5:1-(v-minV)/(maxV-minV));}
 var s='';
-var step=maxV<=10?2:Math.ceil(maxV/5);
-for(var g=0;g<=maxV;g+=step){var y=Y(g);s+='<line x1="'+pl+'" y1="'+y+'" x2="'+(W-pr)+'" y2="'+y+'" stroke="#161616" stroke-opacity="0.12"/><text x="'+(pl-6)+'" y="'+(y+4)+'" font-size="11" text-anchor="end" fill="#3f3f46" font-weight="700">'+g+'</text>';}
+var step=(maxV-minV)<=10?2:Math.ceil((maxV-minV)/5);
+for(var g=minV;g<=maxV;g+=step){var y=Y(g);s+='<line x1="'+pl+'" y1="'+y+'" x2="'+(W-pr)+'" y2="'+y+'" stroke="#161616" stroke-opacity="0.12"/><text x="'+(pl-6)+'" y="'+(y+4)+'" font-size="11" text-anchor="end" fill="#3f3f46" font-weight="700">'+g+'</text>';}
 labels.forEach(function(lb,i){var x=X(i),y=H-pb+20;s+='<text x="'+x+'" y="'+y+'" font-size="11" text-anchor="end" fill="#3f3f46" font-weight="700" transform="rotate(-45 '+x+' '+y+')">'+escapeHtml(lb)+'</text>';});
 var d='',started=false,pts='';
 vals.forEach(function(v,i){if(v===null){started=false;return;}d+=(d?' ':'')+(started?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);started=true;pts+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="4.5" fill="'+color+'" stroke="#fff" stroke-width="2"/>';});
