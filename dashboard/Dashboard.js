@@ -48,7 +48,7 @@ function doGet(e) {
 
 function getData() {
   const cache = CacheService.getScriptCache();
-  const hit = cache.get('dash_all_v5');
+  const hit = cache.get('dash_all_v6');
   if (hit) return JSON.parse(hit);
   const payload = {
     ok: true,
@@ -58,10 +58,10 @@ function getData() {
     webdata: readWebData(),
     gmpScore: readGMPScore(),
     srScore: read5RScore(),
-    trend: readAuditTrend()
+    trend: mergeTrend(readAuditTrend(), readAuditMonthly())
   };
   try {
-    cache.put('dash_all_v5', JSON.stringify(payload), DASH_CONFIG.CACHE_SECONDS);
+    cache.put('dash_all_v6', JSON.stringify(payload), DASH_CONFIG.CACHE_SECONDS);
   } catch (err) {}
   return payload;
 }
@@ -173,7 +173,7 @@ function getOrCreateFolder(name) {
 
 function clearDashCache() {
   try {
-    CacheService.getScriptCache().removeAll(['dash_all', 'dash_all_v2', 'dash_all_v3', 'dash_all_v4', 'dash_all_v5']);
+    CacheService.getScriptCache().removeAll(['dash_all', 'dash_all_v2', 'dash_all_v3', 'dash_all_v4', 'dash_all_v5', 'dash_all_v6']);
   } catch (err) {}
 }
 
@@ -571,6 +571,7 @@ function readAuditTrend() {
     pts.sort(function (a, b) { return a.mi - b.mi; });
     const last = pts[pts.length - 1];
     return {
+      mi: pts.map(function (p) { return p.mi; }),
       months: pts.map(function (p) { return SHORT[p.mi - 1]; }),
       gmp: pts.map(function (p) { return p.skor; }),
       closed: pts.map(function (p) { return p.closed; }),
@@ -608,6 +609,93 @@ function peekMainTab(tabName) {
     ok: true, tab: sh.getName(), rows: sh.getLastRow(), cols: sh.getLastColumn(),
     grid: vals.map(function (r) { return r.map(function (v) { return String(v == null ? '' : v).substring(0, 30); }); })
   };
+}
+
+function readAuditMonthly() {
+  try {
+    let sheet = null;
+    try {
+      const mainSs = SpreadsheetApp.openById(DASH_CONFIG.MAIN_SPREADSHEET_ID);
+      const t = findSheet(mainSs, 'WebData_Audit');
+      if (t && t.getLastRow() >= 2) sheet = t;
+    } catch (e) {}
+    if (!sheet) {
+      const ss = SpreadsheetApp.openById(DASH_CONFIG.WEBDATA_AUDIT.spreadsheetId);
+      sheet = findSheet(ss, DASH_CONFIG.WEBDATA_AUDIT.sheetName);
+    }
+    if (!sheet) return null;
+    const lastRow = sheet.getLastRow();
+    const lastCol = Math.min(sheet.getLastColumn(), 10);
+    if (lastRow < 2) return null;
+    const raw = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+    let hr = -1, cDate = 0, cPlant = 1, cKat = 2, cSkor = 3, cOpen = 5, cClosed = 6;
+    for (let r = 0; r < Math.min(raw.length, 10); r++) {
+      const low = raw[r].map(function (v) { return String(v || '').toLowerCase().trim(); });
+      if (low.indexOf('kategori') !== -1 && low.indexOf('skor') !== -1) {
+        hr = r;
+        cDate = low.indexOf('tanggal');
+        cPlant = low.indexOf('plant');
+        cKat = low.indexOf('kategori');
+        cSkor = low.indexOf('skor');
+        cOpen = low.indexOf('capa_open');
+        cClosed = low.indexOf('capa_closed');
+        break;
+      }
+    }
+    if (hr === -1) return null;
+    const SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const FULL = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
+    const byMonth = {};
+    for (let r = hr + 1; r < raw.length; r++) {
+      const row = raw[r];
+      const plant = String(row[cPlant] || '').toUpperCase().replace(/\s+/g, '');
+      if (plant !== 'CP3') continue;
+      const kat = String(row[cKat] || '').toLowerCase();
+      if (kat.indexOf('process') === -1 && kat.indexOf('proses') === -1) continue;
+      const dv = row[cDate];
+      if (dv === '' || dv === null || dv === undefined) continue;
+      const d = new Date(dv);
+      if (isNaN(d)) continue;
+      const mi = d.getMonth() + 1;
+      const v = parseFloat(row[cSkor]);
+      if (isNaN(v)) continue;
+      let open = parseFloat(row[cOpen]);
+      let closed = parseFloat(row[cClosed]);
+      if (isNaN(open)) open = null;
+      if (isNaN(closed)) closed = null;
+      if (!byMonth[mi] || d > byMonth[mi].d) {
+        byMonth[mi] = { d: d, v: v, open: open, closed: closed };
+      }
+    }
+    const mis = Object.keys(byMonth).map(Number).sort(function (a, b) { return a - b; });
+    if (!mis.length) return null;
+    const last = byMonth[mis[mis.length - 1]];
+    let closing = null;
+    if (last.closed !== null && last.closed !== undefined) {
+      closing = (last.closed > 0 && last.closed <= 1) ? last.closed * 100 : last.closed;
+    } else if (last.open !== null && last.open !== undefined && (last.open + (last.closed || 0)) > 0) {
+      closing = (last.closed || 0) / (last.open + (last.closed || 0)) * 100;
+    }
+    return {
+      mi: mis,
+      months: mis.map(function (m) { return SHORT[m - 1]; }),
+      values: mis.map(function (m) { return byMonth[m].v; }),
+      closing: closing,
+      period: FULL[mis[mis.length - 1] - 1]
+    };
+  } catch (err) {
+    return null;
+  }
+}
+
+function mergeTrend(t, m) {
+  if (!t) return m ? { mi: m.mi, months: m.months, gmp: [], closed: [], process: m.values, closingGmp: null, closingProcess: m.closing, period: m.period, gmpLatest: null } : null;
+  if (!m || !m.mi || !m.mi.length) return t;
+  const map = {};
+  for (let i = 0; i < m.mi.length; i++) map[m.mi[i]] = m.values[i];
+  t.process = (t.mi || []).map(function (mi) { return (mi in map) ? map[mi] : null; });
+  if (m.closing !== null && m.closing !== undefined) t.closingProcess = m.closing;
+  return t;
 }
 
 function sanitizeKey(str) {
