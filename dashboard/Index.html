@@ -165,7 +165,7 @@ google.script.run.withSuccessHandler(function(json){
 loading=false;
 if(!json||json.ok===false){onFail((json&&json.error)||'backend error');return;}
 var lb=json.leaderboard||{};
-renderDashboard(json.dashboard||[],lb.ranking||[],lb.foremen||[],{timestamp:json.timestamp},json.webdata||[]);
+renderDashboard(json.dashboard||[],lb.ranking||[],lb.foremen||[],{timestamp:json.timestamp},json.webdata||[],json.gmpScore,json.srScore);
 setSyncStatus('ok');
 }).withFailureHandler(function(err){
 if(attempt<3){setTimeout(once,2000);}else{loading=false;onFail(err);}
@@ -174,10 +174,10 @@ if(attempt<3){setTimeout(once,2000);}else{loading=false;onFail(err);}
 once();
 }
 function onFail(msg){console.error('[DASHBOARD] Error:',msg);setSyncStatus('error');}
-function renderDashboard(dashData,rank5r,foreman5r,syncData,webData){
+function renderDashboard(dashData,rank5r,foreman5r,syncData,webData,gmpScore,srScore){
 var selectedProduct=PRODUCTS[productIdx];
 var selectedShift=SHIFTS[shiftIdx];
-var kpis=extractKPIs(dashData,selectedProduct,selectedShift,webData||[]);
+var kpis=extractKPIs(dashData,selectedProduct,selectedShift,webData||[],gmpScore,srScore);
 setBox('boxOutput',kpis.outputVsStd,'success');
 setBox('boxProcess',kpis.processScore,'teal');
 setBox('boxProductScore',kpis.productScore,'gold');
@@ -193,7 +193,7 @@ var d=new Date(syncData.timestamp);
 document.getElementById('lastUpdateTime').textContent=d.toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 }
-function extractKPIs(rows,selectedProduct,selectedShift,webData){
+function extractKPIs(rows,selectedProduct,selectedShift,webData,gmpScore,srScore){
 var kpis={output:null,stdPlan:null,yield:null,waste:null,gmp:null,processScore:null,productScore:null,sr:null,outputVsStd:null,dateLabel:null};
 if(!rows||rows.length===0)return formatKPIs(kpis);
 function ymdLocal(dt){var d=new Date(dt);return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
@@ -235,8 +235,8 @@ for(i=0;i<wd.length;i++){keys=Object.keys(wd[i]);for(c=0;c<keys.length;c++){k=ke
 return null;}
 kpis.processScore=pick(findWebdata(function(k){return k.indexOf('process')!==-1;}),kpis.processScore);
 kpis.productScore=pick(findWebdata([function(k){return k.indexOf('product_avgskor')!==-1||k.indexOf('avgskor')!==-1;},function(k){return k.indexOf('product_pctskor')!==-1||k.indexOf('pctskor')!==-1;}]),kpis.productScore);
-kpis.gmp=pick(findWebdata(function(k){return k.indexOf('gmp')!==-1;}),kpis.gmp);
-kpis.sr=pick(findWebdata(function(k){return k.indexOf('5r')!==-1;}),kpis.sr);
+kpis.gmp=pick(gmpScore,findWebdata(function(k){return k.indexOf('gmp')!==-1;}),kpis.gmp);
+kpis.sr=pick(srScore,findWebdata(function(k){return k.indexOf('5r')!==-1;}),kpis.sr);
 return formatKPIs(kpis);
 }
 function formatKPIs(kpis){

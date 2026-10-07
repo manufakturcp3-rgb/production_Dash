@@ -15,6 +15,16 @@ const DASH_CONFIG = {
     sheetName: 'WebData_Produk',
     targetPlant: 'cp3'
   },
+  WEBDATA_AUDIT: {
+    spreadsheetId: '1P34UU9Q1pN4afM9L8Mn23LD90QdnbQ7Y',
+    sheetName: 'WebData',
+    fallbackTab: 'WebData_Audit'
+  },
+  SR_AUDIT: {
+    spreadsheetId: '1TpD67HaxPtkHgWfVRdQ-L5nKckYAIo_5SPEiJFzRBYI',
+    sheetName: 'Update (CP-3)',
+    fallbackTab: '5R_Audit'
+  },
   PHOTO_FOLDER: 'Dashboard5R_Foto',
   ADMIN_KEY: 'cp3admin123',
   CACHE_SECONDS: 600
@@ -38,17 +48,19 @@ function doGet(e) {
 
 function getData() {
   const cache = CacheService.getScriptCache();
-  const hit = cache.get('dash_all_v2');
+  const hit = cache.get('dash_all_v3');
   if (hit) return JSON.parse(hit);
   const payload = {
     ok: true,
     timestamp: new Date().toISOString(),
     dashboard: readDashboard(),
     leaderboard: readLeaderboard(),
-    webdata: readWebData()
+    webdata: readWebData(),
+    gmpScore: readGMPScore(),
+    srScore: read5RScore()
   };
   try {
-    cache.put('dash_all_v2', JSON.stringify(payload), DASH_CONFIG.CACHE_SECONDS);
+    cache.put('dash_all_v3', JSON.stringify(payload), DASH_CONFIG.CACHE_SECONDS);
   } catch (err) {}
   return payload;
 }
@@ -373,6 +385,82 @@ function readWebData() {
     return records;
   } catch (err) {
     return [];
+  }
+}
+
+function readGMPScore() {
+  try {
+    const cfg = DASH_CONFIG.WEBDATA_AUDIT;
+    let ss = null, sheet = null;
+    try {
+      const mainSs = SpreadsheetApp.openById(DASH_CONFIG.MAIN_SPREADSHEET_ID);
+      sheet = findSheet(mainSs, cfg.fallbackTab) || findSheet(mainSs, cfg.sheetName);
+      if (sheet && sheet.getLastRow() >= 2) ss = mainSs;
+    } catch (e) {}
+
+    if (!sheet) {
+      ss = SpreadsheetApp.openById(cfg.spreadsheetId);
+      sheet = findSheet(ss, cfg.sheetName);
+    }
+    if (!sheet) return null;
+
+    const lastRow = sheet.getLastRow();
+    const lastCol = sheet.getLastColumn();
+    if (lastRow < 2 || lastCol < 4) return null;
+
+    const data = sheet.getRange(1, 1, lastRow, Math.min(lastCol, 10)).getValues();
+    let gSum = 0, gCount = 0;
+    for (let i = 1; i < data.length; i++) {
+      const cat = String(data[i][2] || '').toLowerCase();
+      const score = parseFloat(data[i][3]);
+      if (!isNaN(score) && cat.indexOf('gmp') !== -1) {
+        gSum += (score <= 1 && score > 0 ? score * 100 : score);
+        gCount++;
+      }
+    }
+    if (gCount > 0) return (gSum / gCount);
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function read5RScore() {
+  try {
+    const cfg = DASH_CONFIG.SR_AUDIT;
+    let ss = null, sheet = null;
+    try {
+      const mainSs = SpreadsheetApp.openById(DASH_CONFIG.MAIN_SPREADSHEET_ID);
+      sheet = findSheet(mainSs, cfg.fallbackTab) || findSheet(mainSs, cfg.sheetName);
+      if (sheet && sheet.getLastRow() >= 2) ss = mainSs;
+    } catch (e) {}
+
+    if (!sheet) {
+      ss = SpreadsheetApp.openById(cfg.spreadsheetId);
+      sheet = findSheet(ss, cfg.sheetName);
+    }
+    if (!sheet) return null;
+
+    const lastRow = sheet.getLastRow();
+    const lastCol = sheet.getLastColumn();
+    if (lastRow < 2 || lastCol < 7) return null;
+
+    const data = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+    let srSum = 0, srCount = 0;
+    for (let i = 1; i < data.length; i++) {
+      let score = parseFloat(data[i][6]);
+      if (isNaN(score) && data[i].length > 48) {
+        score = parseFloat(data[i][48]);
+      }
+      if (!isNaN(score) && score > 0) {
+        srSum += (score <= 1 ? score * 100 : score);
+        srCount++;
+      }
+    }
+    if (srCount > 0) return (srSum / srCount);
+    return null;
+  } catch (err) {
+    return null;
   }
 }
 

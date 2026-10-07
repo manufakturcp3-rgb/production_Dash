@@ -13,6 +13,14 @@ const CONFIG = {
       filterValue: 'cp3'
     },
     {
+      id: 'webdata_audit',
+      name: 'WebData_Audit',
+      spreadsheetId: '1P34UU9Q1pN4afM9L8Mn23LD90QdnbQ7Y',
+      sheetName: 'WebData',
+      range: 'A1:Z',
+      targetTab: 'WebData_Audit'
+    },
+    {
       id: 'dashboard_khusus',
       name: 'DASHBOARD_KHUSUS',
       spreadsheetId: '1OrmtFMggqx0j5uW_X5Nxfo23ty61F7m6ppKWEPvPu0s',
@@ -22,6 +30,14 @@ const CONFIG = {
       targetTab: 'DASHBOARD KHUSUS',
       isMultiHeader: true,
       headerRows: 4
+    },
+    {
+      id: 'sr_audit',
+      name: '5R_Audit',
+      spreadsheetId: '1TpD67HaxPtkHgWfVRdQ-L5nKckYAIo_5SPEiJFzRBYI',
+      sheetName: 'Update (CP-3)',
+      range: 'A1:BA',
+      targetTab: '5R_Audit'
     }
   ]
 };
