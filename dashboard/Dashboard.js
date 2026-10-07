@@ -597,6 +597,19 @@ function peekAuditTab(tabName) {
   };
 }
 
+function peekMainTab(tabName) {
+  const ss = SpreadsheetApp.openById(DASH_CONFIG.MAIN_SPREADSHEET_ID);
+  const sh = findSheet(ss, tabName);
+  if (!sh) return { ok: false, error: 'tab tidak ketemu' };
+  const lr = Math.min(sh.getLastRow(), 25);
+  const lc = Math.min(sh.getLastColumn(), 15);
+  const vals = sh.getRange(1, 1, lr, lc).getValues();
+  return {
+    ok: true, tab: sh.getName(), rows: sh.getLastRow(), cols: sh.getLastColumn(),
+    grid: vals.map(function (r) { return r.map(function (v) { return String(v == null ? '' : v).substring(0, 30); }); })
+  };
+}
+
 function sanitizeKey(str) {
   return String(str)
     .toLowerCase()
