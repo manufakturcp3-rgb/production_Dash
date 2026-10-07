@@ -97,13 +97,22 @@ function uploadPhoto(prod, slot, dataUrl, filename) {
   if (!prod || !slot || !dataUrl) throw new Error('Data foto tidak lengkap.');
   const s = [1, 2, 3].indexOf(Number(slot));
   if (s === -1) throw new Error('Slot harus 1/2/3.');
-  const m = String(dataUrl).match(/^data:([^;]+);base64,(.+)$/);
-  if (!m) throw new Error('Format data foto salah.');
-  const blob = Utilities.newBlob(Utilities.base64Decode(m[2]), m[1], filename || ('foto_' + Date.now() + '.jpg'));
-  const folder = getOrCreateFolder(DASH_CONFIG.PHOTO_FOLDER);
-  const file = folder.createFile(blob);
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  const url = 'https://drive.google.com/thumbnail?id=' + file.getId() + '&sz=w400';
+  
+  let url = '';
+  // Jika berupa URL web langsung
+  if (String(dataUrl).startsWith('http://') || String(dataUrl).startsWith('https://')) {
+    url = dataUrl;
+  } else {
+    // Jika base64 upload ke Drive
+    const m = String(dataUrl).match(/^data:([^;]+);base64,(.+)$/);
+    if (!m) throw new Error('Format data foto salah.');
+    const blob = Utilities.newBlob(Utilities.base64Decode(m[2]), m[1], filename || ('foto_' + Date.now() + '.jpg'));
+    const folder = getOrCreateFolder(DASH_CONFIG.PHOTO_FOLDER);
+    const file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    url = 'https://drive.google.com/thumbnail?id=' + file.getId() + '&sz=w400';
+  }
+
   const cfg = DASH_CONFIG.LEADERBOARD;
   const ss = SpreadsheetApp.openById(cfg.spreadsheetId);
   const sheet = findSheet(ss, cfg.sheetName);
@@ -146,7 +155,7 @@ function getOrCreateFolder(name) {
 
 function clearDashCache() {
   try {
-    CacheService.getScriptCache().remove('dash_all');
+    CacheService.getScriptCache().removeAll(['dash_all', 'dash_all_v2', 'dash_all_v3']);
   } catch (err) {}
 }
 
