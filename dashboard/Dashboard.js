@@ -38,7 +38,7 @@ function doGet(e) {
 
 function getData() {
   const cache = CacheService.getScriptCache();
-  const hit = cache.get('dash_all');
+  const hit = cache.get('dash_all_v2');
   if (hit) return JSON.parse(hit);
   const payload = {
     ok: true,
@@ -48,7 +48,7 @@ function getData() {
     webdata: readWebData()
   };
   try {
-    cache.put('dash_all', JSON.stringify(payload), DASH_CONFIG.CACHE_SECONDS);
+    cache.put('dash_all_v2', JSON.stringify(payload), DASH_CONFIG.CACHE_SECONDS);
   } catch (err) {}
   return payload;
 }
@@ -157,12 +157,36 @@ function readDashboard() {
     sheet = findSheet(ss, cfg.sheetName);
   }
   if (!sheet) throw new Error('Sheet tidak ditemukan: ' + cfg.sheetName);
-  const startRow = cfg.startRow || 6;
-  const headerStartRow = 2;
-  const numHeaderRows = startRow - headerStartRow;
   const lastRow = sheet.getLastRow();
   const lastCol = sheet.getLastColumn();
-  if (lastRow < startRow || lastCol < 1) return [];
+  if (lastRow < 2 || lastCol < 1) return [];
+
+  // Deteksi dinamis baris header & baris awal data (toleran beda posisi baris 1 vs baris 2)
+  const sampleRows = Math.min(lastRow, 12);
+  const sample = sheet.getRange(1, 1, sampleRows, Math.min(lastCol, 5)).getValues();
+  let headerStartRow = 1;
+  let startRow = 6;
+
+  for (let r = 0; r < sample.length; r++) {
+    const c0 = String(sample[r][0] || '').toUpperCase();
+    const c1 = String(sample[r][1] || '').toUpperCase();
+    if (c0.indexOf('ISOWEEK') !== -1 || c1.indexOf('TANGGAL') !== -1 || c0.indexOf('WEEK') !== -1) {
+      headerStartRow = r + 1;
+      break;
+    }
+  }
+
+  for (let r = headerStartRow; r < sample.length; r++) {
+    const v1 = sample[r][1];
+    if (v1 instanceof Date || (typeof v1 === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v1)) || (typeof v1 === 'string' && /^\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}/.test(v1))) {
+      startRow = r + 1;
+      break;
+    }
+  }
+  if (startRow <= headerStartRow) startRow = headerStartRow + 4;
+  const numHeaderRows = startRow - headerStartRow;
+
+  if (lastRow < startRow) return [];
   const headerMatrix = sheet.getRange(headerStartRow, 1, numHeaderRows, lastCol).getValues();
   for (let r = 0; r < headerMatrix.length; r++) {
     let lastVal = '';
