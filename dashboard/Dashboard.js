@@ -543,8 +543,8 @@ function readAuditTrend() {
         if (name.indexOf(FULL[m]) !== -1) { mi = m + 1; break; }
       }
       if (!mi) return;
-      const lr = Math.min(sh.getLastRow(), 15);
-      const lc = Math.min(sh.getLastColumn(), 32);
+      const lr = Math.min(sh.getLastRow(), 25);
+      const lc = Math.min(sh.getLastColumn(), 40);
       if (lr < 2) return;
       const vals = sh.getRange(1, 1, lr, lc).getValues();
       let skor = null, closed = null, total = null;
@@ -556,6 +556,12 @@ function readAuditTrend() {
           if (label === 'CLOSED' && closed === null) {
             const pct = parseIDPct(vals[r][c + 2]);
             closed = (pct !== null) ? pct : parseIDPct(vals[r][c + 1]);
+          }
+          if ((label === 'CLOSE' || label.indexOf('CLOSED') === 0) && closed === null && label !== 'CLOSED') {
+            for (let k = c + 1; k < Math.min(c + 4, vals[r].length); k++) {
+              const pct = parseIDPct(vals[r][k]);
+              if (pct !== null) { closed = pct; break; }
+            }
           }
         }
       }
