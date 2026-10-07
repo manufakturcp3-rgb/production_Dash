@@ -9,6 +9,11 @@ const DASH_CONFIG = {
     spreadsheetId: '146f5qPWBsDEyIn1e6WpjN-bfkGZXwGQfdqlybhsXdS4',
     sheetName: 'Leaderboard 5R'
   },
+  WEBDATA: {
+    spreadsheetId: '1P34UU9Q1pN4afM9L8Mn23LD90QdnbQ7Y',
+    sheetName: 'WebData_Produk',
+    targetPlant: 'cp3'
+  },
   PHOTO_FOLDER: 'Dashboard5R_Foto',
   ADMIN_KEY: 'cp3admin123',
   CACHE_SECONDS: 600
@@ -38,7 +43,8 @@ function getData() {
     ok: true,
     timestamp: new Date().toISOString(),
     dashboard: readDashboard(),
-    leaderboard: readLeaderboard()
+    leaderboard: readLeaderboard(),
+    webdata: readWebData()
   };
   try {
     cache.put('dash_all', JSON.stringify(payload), DASH_CONFIG.CACHE_SECONDS);
@@ -282,6 +288,39 @@ function findDataEndRow(sheet, startRow, lastRow) {
     if (endRow >= startRow) return endRow;
   } catch (err) {}
   return lastRow;
+}
+
+function readWebData() {
+  try {
+    const cfg = DASH_CONFIG.WEBDATA;
+    const ss = SpreadsheetApp.openById(cfg.spreadsheetId);
+    const sheet = ss.getSheetByName(cfg.sheetName);
+    if (!sheet) return [];
+    const lastRow = sheet.getLastRow();
+    const lastCol = sheet.getLastColumn();
+    if (lastRow < 2 || lastCol < 1) return [];
+    const raw = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+    if (raw.length < 2) return [];
+    const header = raw[0];
+    const target = String(cfg.targetPlant || 'cp3').toLowerCase().replace(/\s+/g, '');
+    const records = [];
+    for (let r = 1; r < raw.length; r++) {
+      const row = raw[r];
+      const plant = String(row[2] || '').toLowerCase().trim().replace(/\s+/g, '');
+      if (plant !== target) continue;
+      const obj = { row_index: r + 1 };
+      header.forEach(function (h, c) {
+        const key = sanitizeKey(String(h || 'col_' + (c + 1)));
+        const val = row[c];
+        obj[key] = (val instanceof Date) ? val.toISOString() : ((val === '') ? null : val);
+      });
+      records.push(obj);
+      if (records.length >= 200) break;
+    }
+    return records;
+  } catch (err) {
+    return [];
+  }
 }
 
 function sanitizeKey(str) {
