@@ -206,7 +206,7 @@ fallback=fallback||rows[i];
 if(ymdLocal(rows[i].tanggal)<=target){latestRow=rows[i];break;}
 }
 latestRow=latestRow||fallback||rows[rows.length-1];
-if(latestRow&&latestRow.tanggal){kpis.dateLabel=String(latestRow.tanggal).substring(0,10);}
+if(latestRow&&latestRow.tanggal){var dd0=new Date(latestRow.tanggal);kpis.dateLabel=dd0.getDate()+'-'+(dd0.getMonth()+1)+'-'+dd0.getFullYear();}
 var prodKey=selectedProduct.toLowerCase().replace(/[^a-z0-9]/g,'_');
 var shiftKey=selectedShift.toLowerCase().replace(/[^a-z0-9]/g,'_');
 var isAllShift=(selectedShift==='ALL SHIFT');
@@ -219,7 +219,7 @@ for(i=0;i<allKeys.length;i++){k=allKeys[i].toLowerCase();if(prodMatch(k)){for(j=
 for(i=0;i<allKeys.length;i++){k=allKeys[i].toLowerCase();for(j=0;j<preds.length;j++){if(preds[j](k)){v=numVal(latestRow[allKeys[i]]);if(v!==null)return v;}}}
 return null;}
 kpis.output=findShiftly('actual')||findShiftly('output')||findShiftly('fg');
-kpis.stdPlan=findShiftly('std')||findShiftly('ppic')||findShiftly('standard');
+kpis.stdPlan=findShiftly('standar')||findShiftly('std')||findShiftly('ppic')||findShiftly('standard');
 kpis.yield=findShiftly('yield');
 kpis.waste=findShiftly('waste')||findShiftly('reject');
 kpis.gmp=findMonthly(function(k){return k.indexOf('gmp')!==-1;});
@@ -232,14 +232,15 @@ function formatKPIs(kpis){
 function fmt(v,suffix){if(v===null||v===undefined||isNaN(v))return null;return Math.round(v).toLocaleString('id-ID')+(suffix?' '+suffix:'');}
 function fmtPct(v){if(v===null||v===undefined||isNaN(v))return null;var pct=v<=1?v*100:v;return pct.toFixed(1)+'%';}
 function fmtScore(v){if(v===null||v===undefined||isNaN(v))return null;return (Math.round(v*10)/10).toLocaleString('id-ID',{maximumFractionDigits:1});}
+function fmt2(v,suffix){if(v===null||v===undefined||isNaN(v))return null;return Number(v).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+(suffix?' '+suffix:'');}
 return{
 yield:fmtPct(kpis.yield),
-waste:fmt(kpis.waste,'Kg'),
+waste:fmt2(kpis.waste,'Kg'),
 gmp:fmtScore(kpis.gmp),
 processScore:fmtScore(kpis.processScore),
 productScore:fmtScore(kpis.productScore),
 sr:fmtScore(kpis.sr),
-outputVsStd:(kpis.output!==null&&kpis.stdPlan!==null)?(fmt(kpis.output)+' / '+fmt(kpis.stdPlan)):fmt(kpis.output,'Pack'),
+outputVsStd:(kpis.output!==null&&kpis.stdPlan!==null)?(fmt(kpis.stdPlan)+' / '+fmt(kpis.output)):((kpis.output!==null)?fmt(kpis.output,'Pack'):fmt(kpis.stdPlan,'Pack')),
 dateLabel:kpis.dateLabel};
 }
 function renderTop5(ranking){
