@@ -65,7 +65,14 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .tv-bar{background:var(--ink);border:3px solid var(--ink);border-radius:var(--radius-pill);box-shadow:var(--shadow-sm);padding:5px 14px;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
 .filter-select{background:transparent;border:none;color:var(--text-primary);font-family:inherit;font-weight:800;font-size:12px;text-align:center;cursor:pointer;outline:none;padding:8px}
 .filter-select option{background:#fff;color:#161616}
-@media (max-width:900px){.dash-grid{grid-template-columns:1fr;grid-template-rows:auto 1fr;overflow-y:auto}html,body{overflow:auto}.boxes-grid{grid-template-columns:1fr 1fr;grid-template-rows:none}.foreman-card{min-height:220px}}
+.trend-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-height:0}
+#trendView{flex-direction:column}
+.trend-card{display:flex;flex-direction:column;padding:14px;min-height:0;background:#fff}
+.trend-title{font-size:clamp(14px,2.4vh,22px);font-weight:900;text-align:center;letter-spacing:.05em;margin-bottom:6px}
+.trend-card svg{flex:1;width:100%;min-height:0}
+.close-pill{margin-top:8px;background:linear-gradient(90deg,#a78bfa 0%,#8b5cf6 45%,#3b82f6 100%);border:3px solid var(--ink);border-radius:100px;box-shadow:4px 4px 0 var(--ink);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 18px;font-weight:800;font-size:clamp(10px,1.6vh,13px);line-height:1.3;text-align:left}
+.close-pill b{font-size:clamp(18px,3.4vh,30px);font-weight:900;white-space:nowrap}
+@media (max-width:900px){.dash-grid{grid-template-columns:1fr;grid-template-rows:auto 1fr;overflow-y:auto}html,body{overflow:auto}.boxes-grid{grid-template-columns:1fr 1fr;grid-template-rows:none}.foreman-card{min-height:220px}.trend-grid{grid-template-columns:1fr;grid-template-rows:none}}
 </style>
 </head>
 <body>
@@ -91,7 +98,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 <div class="toast"><div class="toast-dot live-dot" id="syncDot" style="background:#64748b"></div><span id="syncText">Menghubungkan...</span></div>
 </div>
 </header>
-<main class="dash-grid">
+<main class="dash-grid" id="dashGrid">
 <aside class="rail-col">
 <div class="glass pill" onclick="cycleProduct()" title="Klik untuk ganti produk">
 <div class="pill-cap">PRODUK</div>
@@ -123,6 +130,21 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 <div class="glass box"><div class="box-label">TOP 5 NORMAL OVERTIME <span>weekly</span></div><ol id="boxOt" class="box-top5"><li>Memuat...</li></ol></div>
 </section>
 </main>
+<section id="trendView" style="display:none;flex:1;min-height:0;overflow:hidden">
+<div class="trend-grid">
+<div class="glass trend-card">
+<div class="trend-title">PROCESS SCORE</div>
+<svg id="chartProcess" role="img" aria-label="Grafik Process Score"></svg>
+<div class="close-pill"><span>CLOSING RATE PROCESS SCORE<br>(BULAN YG SEDANG BERJALAN)</span><b id="closeProcessVal">—</b></div>
+</div>
+<div class="glass trend-card">
+<div class="trend-title">GMP</div>
+<svg id="chartGmp" role="img" aria-label="Grafik GMP"></svg>
+<div class="close-pill"><span>CLOSING RATE GMP SCORE<br>(BULAN YG SEDANG BERJALAN)</span><b id="closeGmpVal">—</b></div>
+</div>
+</div>
+<div id="trendPeriod" style="text-align:center;font-size:11px;font-weight:700;color:var(--text-secondary);margin-top:6px"></div>
+</section>
 <footer class="footer-bar">
 <div id="tvBar" class="tv-bar" style="display:none">
 <div class="toast-dot live-dot" style="background:red;flex-shrink:0"></div>
@@ -149,6 +171,7 @@ var productIdx=0,shiftIdx=1;
 var PRODUCT_COLORS={'SIOMAY':'#00b3d8','UDANG KEJU':'#ec008d','PENTOL':'#10b981','ADONAN PANGSIT':'#a78bfa','AYAM CINCANG':'#f97316','LUMPIA':'#ec4899','KERUPUK MIE':'#f59e0b','KULIT PANGSIT':'#14b8a6','MIE':'#6366f1','CABAI':'#22c55e'};
 var tvActive=false,tvTimer=null,tvCountdown=0,tvCountTimer=null;
 var tvCombos=[],tvIndex=0;
+var lastTrend=null,trendVisible=false;
 var loading=false;
 window.addEventListener('DOMContentLoaded',function(){updatePills();loadData();setInterval(loadData,3*60*1000);});
 function updatePills(){
@@ -167,7 +190,9 @@ google.script.run.withSuccessHandler(function(json){
 loading=false;
 if(!json||json.ok===false){onFail((json&&json.error)||'backend error');return;}
 var lb=json.leaderboard||{};
+lastTrend=json.trend||null;
 renderDashboard(json.dashboard||[],lb.ranking||[],lb.foremen||[],{timestamp:json.timestamp},json.webdata||[],json.gmpScore,json.srScore);
+if(trendVisible)renderTrend(lastTrend);
 setSyncStatus('ok');
 }).withFailureHandler(function(err){
 if(attempt<3){setTimeout(once,2000);}else{loading=false;onFail(err);}
@@ -185,6 +210,7 @@ setBox('boxProcess',kpis.processScore,'teal');
 setBox('boxProductScore',kpis.productScore,'gold');
 setBox('boxYield',kpis.yield,'teal');
 setBox('boxGmp',kpis.gmp,'teal');
+if(lastTrend&&lastTrend.gmpLatest!==null&&lastTrend.gmpLatest!==undefined&&!isNaN(lastTrend.gmpLatest))setBox('boxGmp',fmtTrendNum(lastTrend.gmpLatest),'teal');
 setBox('boxSr',kpis.sr,'teal');
 setBox('boxWaste',kpis.waste,'danger');
 document.getElementById('dateDateLabel').textContent=kpis.dateLabel||'—';
@@ -330,6 +356,40 @@ if(status==='loading'){dot.style.background='#f59e0b';text.textContent='Memuat..
 else if(status==='ok'){dot.style.background='#10b981';text.textContent='Live';}
 else{dot.style.background='#f43f5e';text.textContent='Offline';}
 }
+function fmtTrendNum(v){return (Math.round(Number(v)*10)/10).toLocaleString('id-ID',{maximumFractionDigits:1});}
+function drawLine(svgId,labels,values,color){
+var svg=document.getElementById(svgId);
+if(!svg)return;
+var W=420,H=230,pl=34,pr=12,pt=12,pb=46;
+var vals=(values||[]).map(function(v){return (v===null||v===undefined||isNaN(Number(v)))?null:Number(v);});
+var hasAny=vals.some(function(v){return v!==null;});
+svg.setAttribute('viewBox','0 0 '+W+' '+H);
+if(!labels||!labels.length||!hasAny){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" font-size="14" font-weight="700" fill="#9a9aa3">belum ada data</text>';return;}
+var maxV=10;
+vals.forEach(function(v){if(v!==null&&v>maxV)maxV=Math.ceil(v);});
+var n=labels.length;
+function X(i){return pl+(W-pl-pr)*(n===1?0.5:i/(n-1));}
+function Y(v){return pt+(H-pt-pb)*(1-v/maxV);}
+var s='';
+var step=maxV<=10?2:Math.ceil(maxV/5);
+for(var g=0;g<=maxV;g+=step){var y=Y(g);s+='<line x1="'+pl+'" y1="'+y+'" x2="'+(W-pr)+'" y2="'+y+'" stroke="#161616" stroke-opacity="0.12"/><text x="'+(pl-6)+'" y="'+(y+4)+'" font-size="11" text-anchor="end" fill="#3f3f46" font-weight="700">'+g+'</text>';}
+labels.forEach(function(lb,i){var x=X(i),y=H-pb+20;s+='<text x="'+x+'" y="'+y+'" font-size="11" text-anchor="end" fill="#3f3f46" font-weight="700" transform="rotate(-45 '+x+' '+y+')">'+escapeHtml(lb)+'</text>';});
+var d='',started=false,pts='';
+vals.forEach(function(v,i){if(v===null){started=false;return;}d+=(d?' ':'')+(started?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);started=true;pts+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="4.5" fill="'+color+'" stroke="#fff" stroke-width="2"/>';});
+if(d)s+='<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>';
+svg.innerHTML=s+pts;
+}
+function setClose(id,v){var el=document.getElementById(id);if(!el)return;el.textContent=(v===null||v===undefined||isNaN(Number(v)))?'—':fmtTrendNum(v)+'%';}
+function renderTrend(tr){
+tr=tr||lastTrend;
+var months=(tr&&tr.months)||[];
+drawLine('chartProcess',months,tr&&tr.process,'#00a9ce');
+drawLine('chartGmp',months,tr&&tr.gmp,'#2563eb');
+setClose('closeProcessVal',tr&&tr.closingProcess);
+setClose('closeGmpVal',tr&&tr.closingGmp);
+var per=document.getElementById('trendPeriod');
+if(per)per.textContent=tr&&tr.period?('Periode berjalan: '+tr.period):'';
+}
 function toggleTvMode(){
 tvActive=!tvActive;
 var btn=document.getElementById('tvBtn');
@@ -338,18 +398,34 @@ if(tvActive){
 btn.textContent='⏹ Stop TV';btn.style.background='#dc2626';btn.style.borderColor='#161616';btn.style.color='#fff';
 bar.style.display='flex';
 tvCombos=[];PRODUCTS.forEach(function(p){SHIFTS.forEach(function(s){tvCombos.push({p:p,s:s});});});
+tvCombos.push({trend:true});
 tvIndex=0;runTvCycle();
 }else{
 btn.textContent='▶ Mode TV';btn.style.background='';btn.style.borderColor='';btn.style.color='';
 bar.style.display='none';clearTimeout(tvTimer);clearInterval(tvCountTimer);
+document.getElementById('dashGrid').style.display='';
+document.getElementById('trendView').style.display='none';
+trendVisible=false;
 }
 }
 function runTvCycle(){
 if(!tvActive)return;
 var combo=tvCombos[tvIndex];
+if(combo.trend){
+document.getElementById('dashGrid').style.display='none';
+document.getElementById('trendView').style.display='flex';
+trendVisible=true;
+renderTrend(lastTrend);
+document.getElementById('tvBarText').textContent='📈 TREND GMP & PROCESS';
+loadData();
+}else{
+document.getElementById('dashGrid').style.display='';
+document.getElementById('trendView').style.display='none';
+trendVisible=false;
 productIdx=PRODUCTS.indexOf(combo.p);
 shiftIdx=SHIFTS.indexOf(combo.s);
 updatePills();loadData();updateTvBar();
+}
 var interval=parseInt(document.getElementById('tvInterval').value)||8000;
 tvCountdown=Math.floor(interval/1000);
 document.getElementById('tvBarCount').textContent=tvCountdown;

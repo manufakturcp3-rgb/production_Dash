@@ -48,7 +48,7 @@ function doGet(e) {
 
 function getData() {
   const cache = CacheService.getScriptCache();
-  const hit = cache.get('dash_all_v3');
+  const hit = cache.get('dash_all_v4');
   if (hit) return JSON.parse(hit);
   const payload = {
     ok: true,
@@ -57,10 +57,11 @@ function getData() {
     leaderboard: readLeaderboard(),
     webdata: readWebData(),
     gmpScore: readGMPScore(),
-    srScore: read5RScore()
+    srScore: read5RScore(),
+    trend: readAuditTrend()
   };
   try {
-    cache.put('dash_all_v3', JSON.stringify(payload), DASH_CONFIG.CACHE_SECONDS);
+    cache.put('dash_all_v4', JSON.stringify(payload), DASH_CONFIG.CACHE_SECONDS);
   } catch (err) {}
   return payload;
 }
@@ -172,7 +173,7 @@ function getOrCreateFolder(name) {
 
 function clearDashCache() {
   try {
-    CacheService.getScriptCache().removeAll(['dash_all', 'dash_all_v2', 'dash_all_v3']);
+    CacheService.getScriptCache().removeAll(['dash_all', 'dash_all_v2', 'dash_all_v3', 'dash_all_v4']);
   } catch (err) {}
 }
 
@@ -511,6 +512,70 @@ function inspectAudit() {
     out.push({ sheet: sh.getName(), gid: sh.getSheetId(), rows: sh.getLastRow(), cols: sh.getLastColumn(), preview: preview });
   }
   return { ok: true, sheets: out };
+}
+
+function parseIDPct(v) {
+  if (v === '' || v === null || v === undefined) return null;
+  if (typeof v === 'number') {
+    if (isNaN(v)) return null;
+    return (v > 0 && v <= 1) ? v * 100 : v;
+  }
+  let s = String(v).replace(/%/g, '').replace(/\s+/g, '');
+  if (s.indexOf(',') !== -1) {
+    s = s.replace(/\./g, '').replace(',', '.');
+  }
+  const n = parseFloat(s);
+  if (isNaN(n)) return null;
+  return (n > 0 && n <= 1) ? n * 100 : n;
+}
+
+function readAuditTrend() {
+  try {
+    const ss = SpreadsheetApp.openById('1_Zw21JaDcsURJU0Zf7pyGxFqPYa5hB0-hkfgqUgGY-0');
+    const FULL = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
+    const SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const pts = [];
+    ss.getSheets().forEach(function (sh) {
+      const name = String(sh.getName() || '').toUpperCase().trim();
+      if (/^COPY OF/.test(name) || name.indexOf('MASTER') !== -1 || name.indexOf('SUMMARY') !== -1) return;
+      let mi = 0;
+      for (let m = 0; m < FULL.length; m++) {
+        if (name.indexOf(FULL[m]) !== -1) { mi = m + 1; break; }
+      }
+      if (!mi) return;
+      const lr = Math.min(sh.getLastRow(), 15);
+      const lc = Math.min(sh.getLastColumn(), 32);
+      if (lr < 2) return;
+      const vals = sh.getRange(1, 1, lr, lc).getValues();
+      let skor = null, closed = null, total = null;
+      for (let r = 0; r < vals.length; r++) {
+        for (let c = 0; c < vals[r].length; c++) {
+          const label = String(vals[r][c] || '').toUpperCase().trim();
+          if (label === 'SKOR' && skor === null) skor = parseIDPct(vals[r][c + 1]);
+          if (label === 'TOTAL' && total === null) total = parseIDPct(vals[r][c + 1]);
+          if (label === 'CLOSED' && closed === null) {
+            const pct = parseIDPct(vals[r][c + 2]);
+            closed = (pct !== null) ? pct : parseIDPct(vals[r][c + 1]);
+          }
+        }
+      }
+      pts.push({ mi: mi, skor: skor, closed: closed, total: total });
+    });
+    if (!pts.length) return null;
+    pts.sort(function (a, b) { return a.mi - b.mi; });
+    const last = pts[pts.length - 1];
+    return {
+      months: pts.map(function (p) { return SHORT[p.mi - 1]; }),
+      gmp: pts.map(function (p) { return p.skor; }),
+      closed: pts.map(function (p) { return p.closed; }),
+      closingGmp: last.closed,
+      closingProcess: null,
+      period: FULL[last.mi - 1],
+      gmpLatest: last.skor
+    };
+  } catch (err) {
+    return null;
+  }
 }
 
 function sanitizeKey(str) {
