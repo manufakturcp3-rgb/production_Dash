@@ -671,10 +671,16 @@ function readAuditMonthly() {
     if (!mis.length) return null;
     const last = byMonth[mis[mis.length - 1]];
     let closing = null;
-    if (last.closed !== null && last.closed !== undefined) {
-      closing = (last.closed > 0 && last.closed <= 1) ? last.closed * 100 : last.closed;
-    } else if (last.open !== null && last.open !== undefined && (last.open + (last.closed || 0)) > 0) {
-      closing = (last.closed || 0) / (last.open + (last.closed || 0)) * 100;
+    for (let k = mis.length - 1; k >= 0; k--) {
+      const b = byMonth[mis[k]];
+      if (b.closed !== null && b.closed !== undefined) {
+        closing = (b.closed > 0 && b.closed <= 1) ? b.closed * 100 : b.closed;
+        break;
+      }
+      if (b.open !== null && b.open !== undefined && ((b.open + (b.closed || 0)) > 0)) {
+        closing = (b.closed || 0) / (b.open + (b.closed || 0)) * 100;
+        break;
+      }
     }
     return {
       mi: mis,
