@@ -646,9 +646,12 @@ function readAuditMonthly() {
     const SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     const FULL = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
     const byMonth = {};
+    const plantsSeen = {};
     for (let r = hr + 1; r < raw.length; r++) {
       const row = raw[r];
-      const plant = String(row[cPlant] || '').toUpperCase().replace(/\s+/g, '');
+      const plantRaw = String(row[cPlant] || '');
+      if (plantRaw.trim() !== '') plantsSeen[plantRaw.trim()] = true;
+      const plant = plantRaw.toUpperCase().replace(/\s+/g, '');
       if (plant !== 'CP3') continue;
       const kat = String(row[cKat] || '').toLowerCase();
       if (kat.indexOf('process') === -1 && kat.indexOf('proses') === -1) continue;
@@ -687,7 +690,8 @@ function readAuditMonthly() {
       months: mis.map(function (m) { return SHORT[m - 1]; }),
       values: mis.map(function (m) { return byMonth[m].v; }),
       closing: closing,
-      period: FULL[mis[mis.length - 1] - 1]
+      period: FULL[mis[mis.length - 1] - 1],
+      plantsSeen: Object.keys(plantsSeen)
     };
   } catch (err) {
     return null;
