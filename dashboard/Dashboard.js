@@ -1,4 +1,5 @@
 const DASH_CONFIG = {
+  MAIN_SPREADSHEET_ID: '146f5qPWBsDEyIn1e6WpjN-bfkGZXwGQfdqlybhsXdS4',
   DASHBOARD: {
     spreadsheetId: '1OrmtFMggqx0j5uW_X5Nxfo23ty61F7m6ppKWEPvPu0s',
     sheetName: 'DASHBOARD KHUSUS',
@@ -139,8 +140,22 @@ function clearDashCache() {
 
 function readDashboard() {
   const cfg = DASH_CONFIG.DASHBOARD;
-  const ss = SpreadsheetApp.openById(cfg.spreadsheetId);
-  const sheet = ss.getSheetByName(cfg.sheetName);
+  let ss = null;
+  let sheet = null;
+
+  try {
+    const mainSs = SpreadsheetApp.openById(DASH_CONFIG.MAIN_SPREADSHEET_ID);
+    const mainSheet = findSheet(mainSs, cfg.sheetName);
+    if (mainSheet && mainSheet.getLastRow() >= (cfg.startRow || 6)) {
+      ss = mainSs;
+      sheet = mainSheet;
+    }
+  } catch (e) {}
+
+  if (!sheet) {
+    ss = SpreadsheetApp.openById(cfg.spreadsheetId);
+    sheet = findSheet(ss, cfg.sheetName);
+  }
   if (!sheet) throw new Error('Sheet tidak ditemukan: ' + cfg.sheetName);
   const startRow = cfg.startRow || 6;
   const headerStartRow = 2;
@@ -293,8 +308,22 @@ function findDataEndRow(sheet, startRow, lastRow) {
 function readWebData() {
   try {
     const cfg = DASH_CONFIG.WEBDATA;
-    const ss = SpreadsheetApp.openById(cfg.spreadsheetId);
-    const sheet = ss.getSheetByName(cfg.sheetName);
+    let ss = null;
+    let sheet = null;
+
+    try {
+      const mainSs = SpreadsheetApp.openById(DASH_CONFIG.MAIN_SPREADSHEET_ID);
+      const mainSheet = findSheet(mainSs, cfg.sheetName);
+      if (mainSheet && mainSheet.getLastRow() >= 2) {
+        ss = mainSs;
+        sheet = mainSheet;
+      }
+    } catch (e) {}
+
+    if (!sheet) {
+      ss = SpreadsheetApp.openById(cfg.spreadsheetId);
+      sheet = findSheet(ss, cfg.sheetName);
+    }
     if (!sheet) return [];
     const lastRow = sheet.getLastRow();
     const lastCol = sheet.getLastColumn();
@@ -307,7 +336,7 @@ function readWebData() {
     for (let r = 1; r < raw.length; r++) {
       const row = raw[r];
       const plant = String(row[2] || '').toLowerCase().trim().replace(/\s+/g, '');
-      if (plant !== target) continue;
+      if (plant && plant !== target) continue;
       const obj = { row_index: r + 1 };
       header.forEach(function (h, c) {
         const key = sanitizeKey(String(h || 'col_' + (c + 1)));
