@@ -48,7 +48,7 @@ function doGet(e) {
 
 function getData() {
   const cache = CacheService.getScriptCache();
-  const hit = cache.get('dash_all_v4');
+  const hit = cache.get('dash_all_v5');
   if (hit) return JSON.parse(hit);
   const payload = {
     ok: true,
@@ -61,7 +61,7 @@ function getData() {
     trend: readAuditTrend()
   };
   try {
-    cache.put('dash_all_v4', JSON.stringify(payload), DASH_CONFIG.CACHE_SECONDS);
+    cache.put('dash_all_v5', JSON.stringify(payload), DASH_CONFIG.CACHE_SECONDS);
   } catch (err) {}
   return payload;
 }
@@ -173,7 +173,7 @@ function getOrCreateFolder(name) {
 
 function clearDashCache() {
   try {
-    CacheService.getScriptCache().removeAll(['dash_all', 'dash_all_v2', 'dash_all_v3', 'dash_all_v4']);
+    CacheService.getScriptCache().removeAll(['dash_all', 'dash_all_v2', 'dash_all_v3', 'dash_all_v4', 'dash_all_v5']);
   } catch (err) {}
 }
 
@@ -582,6 +582,19 @@ function readAuditTrend() {
   } catch (err) {
     return null;
   }
+}
+
+function peekAuditTab(tabName) {
+  const ss = SpreadsheetApp.openById('1_Zw21JaDcsURJU0Zf7pyGxFqPYa5hB0-hkfgqUgGY-0');
+  const sh = findSheet(ss, tabName);
+  if (!sh) return { ok: false, error: 'tab tidak ketemu' };
+  const lr = Math.min(sh.getLastRow(), 15);
+  const lc = Math.min(sh.getLastColumn(), 40);
+  const vals = sh.getRange(1, 1, lr, lc).getValues();
+  return {
+    ok: true, tab: sh.getName(), rows: sh.getLastRow(), cols: sh.getLastColumn(),
+    grid: vals.map(function (r) { return r.map(function (v) { return String(v == null ? '' : v).substring(0, 28); }); })
+  };
 }
 
 function sanitizeKey(str) {
