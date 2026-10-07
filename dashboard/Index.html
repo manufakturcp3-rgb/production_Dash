@@ -218,10 +218,10 @@ function findMonthly(tests){var preds=Array.isArray(tests)?tests:[tests];var i,k
 for(i=0;i<allKeys.length;i++){k=allKeys[i].toLowerCase();if(prodMatch(k)){for(j=0;j<preds.length;j++){if(preds[j](k)){v=numVal(latestRow[allKeys[i]]);if(v!==null)return v;}}}}
 for(i=0;i<allKeys.length;i++){k=allKeys[i].toLowerCase();for(j=0;j<preds.length;j++){if(preds[j](k)){v=numVal(latestRow[allKeys[i]]);if(v!==null)return v;}}}
 return null;}
-kpis.output=findShiftly('actual')||findShiftly('output')||findShiftly('fg');
-kpis.stdPlan=findShiftly('standar')||findShiftly('std')||findShiftly('ppic')||findShiftly('standard');
+kpis.output=pick(findShiftly('actual'),findShiftly('output'),findShiftly('fg'));
+kpis.stdPlan=pick(findShiftly('standar'),findShiftly('std'),findShiftly('ppic'),findShiftly('standard'));
 kpis.yield=findShiftly('yield');
-kpis.waste=findShiftly('waste')||findShiftly('reject');
+kpis.waste=pick(findShiftly('waste'),findShiftly('reject'));
 kpis.gmp=findMonthly(function(k){return k.indexOf('gmp')!==-1;});
 kpis.sr=findMonthly([function(k){return k.indexOf('5r')!==-1;},function(k){return /(^|_)sr($|_)/.test(k);}]);
 kpis.processScore=findMonthly([function(k){return k.indexOf('process')!==-1;},function(k){return k.indexOf('proses')!==-1;}]);
