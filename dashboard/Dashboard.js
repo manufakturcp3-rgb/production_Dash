@@ -490,6 +490,29 @@ function read5RScore() {
   }
 }
 
+function inspectAudit() {
+  const ss = SpreadsheetApp.openById('1_Zw21JaDcsURJU0Zf7pyGxFqPYa5hB0-hkfgqUgGY-0');
+  const out = [];
+  const sheets = ss.getSheets();
+  for (let s = 0; s < sheets.length; s++) {
+    const sh = sheets[s];
+    const lr = Math.min(sh.getLastRow(), 30);
+    const lc = Math.min(sh.getLastColumn(), 30);
+    if (lr < 1) {
+      out.push({ sheet: sh.getName(), gid: sh.getSheetId(), rows: 0 });
+      continue;
+    }
+    const vals = sh.getRange(1, 1, lr, lc).getValues();
+    const preview = [];
+    for (let r = 0; r < vals.length && preview.length < 6; r++) {
+      const row = vals[r].map(function (v) { return String(v == null ? '' : v).trim().substring(0, 30); });
+      if (row.some(function (c) { return c !== ''; })) preview.push(row);
+    }
+    out.push({ sheet: sh.getName(), gid: sh.getSheetId(), rows: sh.getLastRow(), cols: sh.getLastColumn(), preview: preview });
+  }
+  return { ok: true, sheets: out };
+}
+
 function sanitizeKey(str) {
   return String(str)
     .toLowerCase()
