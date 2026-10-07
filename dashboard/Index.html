@@ -196,9 +196,16 @@ document.getElementById('lastUpdateTime').textContent=d.toLocaleString('id-ID',{
 function extractKPIs(rows,selectedProduct,selectedShift){
 var kpis={output:null,stdPlan:null,yield:null,waste:null,gmp:null,processScore:null,productScore:null,sr:null,outputVsStd:null,dateLabel:null};
 if(!rows||rows.length===0)return formatKPIs(kpis);
-var latestRow=null;
-for(var i=rows.length-1;i>=0;i--){if(rows[i].tanggal){latestRow=rows[i];break;}}
-latestRow=latestRow||rows[rows.length-1];
+function ymdLocal(dt){var d=new Date(dt);return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
+var dd=new Date();dd.setDate(dd.getDate()-2);
+var target=ymdLocal(dd);
+var latestRow=null,fallback=null;
+for(var i=rows.length-1;i>=0;i--){
+if(!rows[i].tanggal)continue;
+fallback=fallback||rows[i];
+if(ymdLocal(rows[i].tanggal)<=target){latestRow=rows[i];break;}
+}
+latestRow=latestRow||fallback||rows[rows.length-1];
 if(latestRow&&latestRow.tanggal){kpis.dateLabel=String(latestRow.tanggal).substring(0,10);}
 var prodKey=selectedProduct.toLowerCase().replace(/[^a-z0-9]/g,'_');
 var shiftKey=selectedShift.toLowerCase().replace(/[^a-z0-9]/g,'_');

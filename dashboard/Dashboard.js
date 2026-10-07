@@ -161,15 +161,15 @@ function readDashboard() {
     const unique = parts.filter(function (p, i) { return parts.indexOf(p) === i; });
     colNames.push(sanitizeKey(unique.join('__') || 'col_' + (c + 1)));
   }
-  const totalRows = lastRow - startRow + 1;
-  const take = Math.min(totalRows, cfg.maxRows || 8);
-  const fromRow = lastRow - take + 1;
-  const dataMatrix = sheet.getRange(fromRow, 1, take, lastCol).getValues();
+  const endRow = findDataEndRow(sheet, startRow, lastRow);
+  const wantRows = Math.min(endRow - startRow + 1, cfg.maxRows || 8);
+  const safeFrom = Math.max(startRow, endRow - wantRows + 1);
+  const dataMatrix = sheet.getRange(safeFrom, 1, endRow - safeFrom + 1, lastCol).getValues();
   const records = [];
   dataMatrix.forEach(function (row, idx) {
     const hasData = row.some(function (cell) { return cell !== '' && cell !== null && cell !== undefined; });
     if (!hasData) return;
-    const obj = { row_index: fromRow + idx };
+    const obj = { row_index: safeFrom + idx };
     colNames.forEach(function (key, c) {
       const val = row[c];
       obj[key] = (val instanceof Date) ? val.toISOString() : ((val === '') ? null : val);
@@ -264,6 +264,24 @@ function readLeaderboard() {
     if (foremen.length >= 50) break;
   }
   return { ranking: ranking, foremen: foremen };
+}
+
+function findDataEndRow(sheet, startRow, lastRow) {
+  try {
+    const t = new Date();
+    t.setDate(t.getDate() - 2);
+    const target = Utilities.formatDate(t, 'Asia/Jakarta', 'yyyyMMdd');
+    const vals = sheet.getRange(startRow, 2, lastRow - startRow + 1, 1).getValues();
+    let endRow = 0;
+    for (let i = 0; i < vals.length; i++) {
+      const v = vals[i][0];
+      if (v === '' || v === null || v === undefined) continue;
+      const ymd = Utilities.formatDate(new Date(v), 'Asia/Jakarta', 'yyyyMMdd');
+      if (ymd <= target) endRow = startRow + i;
+    }
+    if (endRow >= startRow) return endRow;
+  } catch (err) {}
+  return lastRow;
 }
 
 function sanitizeKey(str) {
