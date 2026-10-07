@@ -48,7 +48,7 @@ function doGet(e) {
 
 function getData() {
   const cache = CacheService.getScriptCache();
-  const hit = cache.get('dash_all_v6');
+  const hit = cache.get('dash_all_v7');
   if (hit) return JSON.parse(hit);
   const payload = {
     ok: true,
@@ -61,7 +61,7 @@ function getData() {
     trend: mergeTrend(readAuditTrend(), readAuditMonthly())
   };
   try {
-    cache.put('dash_all_v6', JSON.stringify(payload), DASH_CONFIG.CACHE_SECONDS);
+    cache.put('dash_all_v7', JSON.stringify(payload), DASH_CONFIG.CACHE_SECONDS);
   } catch (err) {}
   return payload;
 }
@@ -173,7 +173,7 @@ function getOrCreateFolder(name) {
 
 function clearDashCache() {
   try {
-    CacheService.getScriptCache().removeAll(['dash_all', 'dash_all_v2', 'dash_all_v3', 'dash_all_v4', 'dash_all_v5', 'dash_all_v6']);
+    CacheService.getScriptCache().removeAll(['dash_all', 'dash_all_v2', 'dash_all_v3', 'dash_all_v4', 'dash_all_v5', 'dash_all_v7']);
   } catch (err) {}
 }
 
@@ -699,13 +699,33 @@ function readAuditMonthly() {
 }
 
 function mergeTrend(t, m) {
-  if (!t) return m ? { mi: m.mi, months: m.months, gmp: [], closed: [], process: m.values, closingGmp: null, closingProcess: m.closing, period: m.period, gmpLatest: null } : null;
-  if (!m || !m.mi || !m.mi.length) return t;
-  const map = {};
-  for (let i = 0; i < m.mi.length; i++) map[m.mi[i]] = m.values[i];
-  t.process = (t.mi || []).map(function (mi) { return (mi in map) ? map[mi] : null; });
-  if (m.closing !== null && m.closing !== undefined) t.closingProcess = m.closing;
-  return t;
+  const SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const FULL = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
+  if (!t && !m) return null;
+  const set = {};
+  ((t && t.mi) || []).forEach(function (x) { set[x] = true; });
+  ((m && m.mi) || []).forEach(function (x) { set[x] = true; });
+  const mis = Object.keys(set).map(Number).sort(function (a, b) { return a - b; });
+  if (!mis.length) return t || null;
+  const tg = {}, tc = {}, mp = {};
+  if (t) {
+    (t.mi || []).forEach(function (mi, i) { tg[mi] = t.gmp[i]; tc[mi] = t.closed[i]; });
+  }
+  if (m) {
+    (m.mi || []).forEach(function (mi, i) { mp[mi] = m.values[i]; });
+  }
+  const lastMi = mis[mis.length - 1];
+  return {
+    mi: mis,
+    months: mis.map(function (x) { return SHORT[x - 1]; }),
+    gmp: mis.map(function (x) { return (x in tg) ? tg[x] : null; }),
+    closed: mis.map(function (x) { return (x in tc) ? tc[x] : null; }),
+    process: mis.map(function (x) { return (x in mp) ? mp[x] : null; }),
+    closingGmp: t ? t.closingGmp : null,
+    closingProcess: m ? m.closing : null,
+    period: FULL[lastMi - 1],
+    gmpLatest: t ? t.gmpLatest : null
+  };
 }
 
 function sanitizeKey(str) {
