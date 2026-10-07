@@ -69,6 +69,23 @@ function getLeaderboard() {
   return readLeaderboard();
 }
 
+function clearLeaderboard() {
+  const cfg = DASH_CONFIG.LEADERBOARD;
+  const ss = SpreadsheetApp.openById(cfg.spreadsheetId);
+  const sheet = findSheet(ss, cfg.sheetName);
+  if (!sheet) throw new Error('Sheet tidak ditemukan: ' + cfg.sheetName);
+  for (let i = 0; i < 5; i++) {
+    sheet.getRange(2 + i, 2).setValue('');
+    sheet.getRange(2 + i, 3).setValue('');
+  }
+  const lastRow = sheet.getLastRow();
+  if (lastRow >= 2) {
+    sheet.getRange(2, 8, lastRow - 1, 6).clearContent();
+  }
+  clearDashCache();
+  return { ok: true };
+}
+
 function saveTop5(data) {
   const cfg = DASH_CONFIG.LEADERBOARD;
   const ss = SpreadsheetApp.openById(cfg.spreadsheetId);
